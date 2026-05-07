@@ -1,0 +1,18 @@
+--- a/canvas-server/build.gradle.kts
++++ b/canvas-server/build.gradle.kts
+@@ -1,4 +_,4 @@
+-    implementation(projects.canvasApi)
++    implementation(projects.surfCanvasApi)
+@@ -1,4 +_,4 @@
+-            "Implementation-Title" to "Canvas",
++            "Implementation-Title" to "SurfCanvas",
+@@ -1,4 +_,4 @@
+-            "Specification-Title" to "Canvas",
++            "Specification-Title" to "SurfCanvas",
+@@ -1,4 +_,4 @@
+-            "Specification-Vendor" to "Canvas Team",
+-            "Brand-Id" to "canvasmc:canvas",
+-            "Brand-Name" to "Canvas",
++            "Specification-Vendor" to "SLNE Development",
++            "Brand-Id" to "slne-development:surf-canvas",
++            "Brand-Name" to "SurfCanvas",
