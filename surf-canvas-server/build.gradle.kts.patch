@@ -5,7 +5,7 @@
      }
  
 -    activeFork = canvas
-+    val surfCanvas = forks.register("surfCanvas") {
++    val surfCanvas = forks.register("surf-canvas") {
 +        forks = canvas
 +        upstream.patchRepo("paperServer") {
 +            upstreamRepo = canvas.patchedRepo("paperServer")
