@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     java
-    id("io.canvasmc.weaver.patcher") version "2.4.4-SNAPSHOT"
+    id("io.canvasmc.weaver.patcher") version "2.3.12"
     id("xyz.jpenilla.resource-factory-paper-convention") version "1.3.1" apply false
 }
 
@@ -11,7 +11,6 @@ val paperMavenPublicUrl = "https://repo.papermc.io/repository/maven-public/"
 
 paperweight {
     filterPatches = false
-    gitFilePatches = false
 
     upstreams.canvas {
         ref = providers.gradleProperty("canvasCommit")
@@ -26,16 +25,21 @@ paperweight {
             outputFile = file("surf-canvas-api/build.gradle.kts")
             patchFile = file("surf-canvas-api/build.gradle.kts.patch")
         }
+        patchRepo("paperApi") {
+            upstreamPath = "paper-api"
+            patchesDir = file("surf-canvas-api/paper-patches")
+            outputDir = file("paper-api")
+        }
+        patchRepo("foliaApi") {
+            upstreamPath = "folia-api"
+            patchesDir = file("surf-canvas-api/folia-patches")
+            outputDir = file("folia-api")
+        }
         patchDir("canvasApi") {
             upstreamPath = "canvas-api"
+            excludes = listOf("build.gradle.kts", "build.gradle.kts.patch", "paper-patches", "folia-patches")
             patchesDir = file("surf-canvas-api/canvas-patches")
             outputDir = file("canvas-api")
-        }
-        patchDir("canvasServer") {
-            upstreamPath = "canvas-server"
-            excludes = listOf("build.gradle.kts", "build.gradle.kts.patch")
-            patchesDir = file("surf-canvas-server/canvas-patches")
-            outputDir = file("canvas-server")
         }
     }
 }
@@ -62,15 +66,12 @@ subprojects {
         options.isFork = true
         options.compilerArgs.addAll(listOf("-Xlint:-deprecation", "-Xlint:-removal"))
     }
-
     tasks.withType<Javadoc>().configureEach {
         options.encoding = Charsets.UTF_8.name()
     }
-
     tasks.withType<ProcessResources>().configureEach {
         filteringCharset = Charsets.UTF_8.name()
     }
-
     tasks.withType<Test>().configureEach {
         testLogging {
             showStackTraces = true

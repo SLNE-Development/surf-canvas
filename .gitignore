@@ -4,13 +4,16 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-/canvas-api/
-/canvas-server/
-/paper-api/
-/paper-server/
-/folia-api/
-/folia-server/
-/run/
+/run
+/surf-canvas-api/build.gradle.kts
+/surf-canvas-server/build.gradle.kts
+/surf-canvas-server/src/minecraft
+/canvas-api
+/canvas-server
+/folia-api
+/folia-server
+/paper-server
+/paper-api
 
 ### IntelliJ IDEA ###
 .idea/modules.xml

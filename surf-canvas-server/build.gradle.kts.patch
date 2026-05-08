@@ -1,18 +1,31 @@
 --- a/canvas-server/build.gradle.kts
 +++ b/canvas-server/build.gradle.kts
-@@ -1,4 +_,4 @@
+@@ -172,7 +_,7 @@
+ }
+ 
+ dependencies {
 -    implementation(projects.canvasApi)
 +    implementation(projects.surfCanvasApi)
-@@ -1,4 +_,4 @@
+     implementation("ca.spottedleaf:concurrentutil:0.0.8")
+     implementation("org.jline:jline-terminal-ffm:3.29.0") // use ffm on java 22+
+     implementation("org.jline:jline-terminal-jni:3.29.0") // fall back to jni on java 21
+@@ -247,14 +_,14 @@
+         val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
+         attributes(
+             "Main-Class" to "org.bukkit.craftbukkit.Main",
 -            "Implementation-Title" to "Canvas",
 +            "Implementation-Title" to "SurfCanvas",
-@@ -1,4 +_,4 @@
+             "Implementation-Version" to implementationVersion,
+             "Implementation-Vendor" to date,
 -            "Specification-Title" to "Canvas",
 +            "Specification-Title" to "SurfCanvas",
-@@ -1,4 +_,4 @@
+             "Specification-Version" to project.version,
 -            "Specification-Vendor" to "Canvas Team",
 -            "Brand-Id" to "canvasmc:canvas",
 -            "Brand-Name" to "Canvas",
-+            "Specification-Vendor" to "SLNE Development",
-+            "Brand-Id" to "slne-development:surf-canvas",
++            "Specification-Vendor" to "SLNE Development Team",
++            "Brand-Id" to "slne:surfcanvas",
 +            "Brand-Name" to "SurfCanvas",
+             "Build-Number" to (build ?: ""),
+             "Build-Time" to buildTime.toString(),
+             "Git-Branch" to gitBranch,
