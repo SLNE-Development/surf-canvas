@@ -1,0 +1,106 @@
+name: Build and Release SurfCanvas
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  BUILD_NUMBER: ${{ github.run_number }}
+
+jobs:
+  build_release:
+    name: Build and Release
+    runs-on: self-hosted
+
+    steps:
+      - name: Collect workflow telemetry
+        uses: catchpoint/workflow-telemetry-action@v2
+
+      - name: Check out repository
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up GraalVM JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: "graalvm"
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          allow-snapshot-wrappers: true
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Configure Git identity
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+      - name: Apply all patches
+        run: ./gradlew applyAllPatches --no-scan --stacktrace
+
+      - name: Build Paperclip JAR
+        run: ./gradlew createReobfPaperclipJar --no-scan --stacktrace
+
+      - name: Determine version and release metadata
+        shell: bash
+        run: |
+          MC_VERSION=$(grep '^mcVersion=' gradle.properties | cut -d'=' -f2 | xargs)
+          CHANNEL=$(grep '^channel=' gradle.properties | cut -d'=' -f2 | xargs | tr '[:upper:]' '[:lower:]')
+          VERSION="${MC_VERSION}.build.${BUILD_NUMBER}-${CHANNEL}"
+
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+          if [ "$CHANNEL" = "stable" ] || [ "$CHANNEL" = "release" ]; then
+            echo "PRERELEASE=false" >> "$GITHUB_ENV"
+            echo "MAKE_LATEST=true" >> "$GITHUB_ENV"
+          else
+            echo "PRERELEASE=true" >> "$GITHUB_ENV"
+            echo "MAKE_LATEST=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Locate Paperclip JAR
+        shell: bash
+        run: |
+          JAR_PATH=$(find surf-canvas-server/build/libs -name "*paperclip*reobf*.jar" -type f | head -n 1)
+
+          if [ -z "$JAR_PATH" ]; then
+            echo "::error::No paperclip JAR found in surf-canvas-server/build/libs" >&2
+            echo "Available files:"
+            find surf-canvas-server/build/libs -type f || true
+            exit 1
+          fi
+
+          echo "Found JAR: ${JAR_PATH}"
+          echo "JAR_PATH=${JAR_PATH}" >> "$GITHUB_ENV"
+
+      - name: Rename JAR to include version
+        shell: bash
+        run: |
+          JAR_DIR=$(dirname "$JAR_PATH")
+          RENAMED="${JAR_DIR}/surf-canvas-${VERSION}.jar"
+          cp "$JAR_PATH" "$RENAMED"
+          echo "RELEASE_JAR=${RENAMED}" >> "$GITHUB_ENV"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: SurfCanvas ${{ env.VERSION }}
+          draft: false
+          prerelease: ${{ env.PRERELEASE }}
+          make_latest: ${{ env.MAKE_LATEST }}
+          generate_release_notes: true
+          files: ${{ env.RELEASE_JAR }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
