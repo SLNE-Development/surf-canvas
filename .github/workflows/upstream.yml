@@ -33,7 +33,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Resolve Canvas branch
         run: |
@@ -52,11 +51,18 @@ jobs:
           echo "Using Canvas branch: $CANVAS_BRANCH"
 
       - name: Check if update is needed
-        id: check
         run: |
-          OPEN_ISSUE=$(gh issue list --state open --label "upstream-update" --json number --jq '.[0].number // empty')
+          OPEN_ISSUE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues?state=open&labels=upstream-update&per_page=1" \
+            | jq -r '.[0].number // empty')
+
           CURRENT_COMMIT=$(grep '^canvasCommit' gradle.properties | awk -F '=' '{print $2}' | tr -d '[:space:]\r')
-          LATEST_COMMIT=$(curl -s "https://api.github.com/repos/CraftCanvasMC/Canvas/commits/$CANVAS_BRANCH" | jq -r '.sha' | tr -d '[:space:]\r')
+          LATEST_COMMIT=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/CraftCanvasMC/Canvas/commits/$CANVAS_BRANCH" \
+            | jq -r '.sha' | tr -d '[:space:]\r')
 
           echo "OPEN_ISSUE=$OPEN_ISSUE" >> $GITHUB_ENV
           echo "CURRENT_COMMIT=$CURRENT_COMMIT" >> $GITHUB_ENV
@@ -79,7 +85,7 @@ jobs:
       - name: Update Weaver patcher version
         if: env.SKIP == 'false'
         run: |
-          UPSTREAM_GRADLE=$(curl -s -H "Accept: application/vnd.github.v3.raw" \
+          UPSTREAM_GRADLE=$(curl -s \
             "https://raw.githubusercontent.com/CraftCanvasMC/Canvas/$CANVAS_BRANCH/build.gradle.kts")
 
           UPSTREAM_WEAVER=$(echo "$UPSTREAM_GRADLE" | grep "$PLUGIN_ID" | sed -E 's/.*version "([^"]+)".*/\1/' | tr -d '[:space:]\r' | head -n1)
@@ -96,7 +102,8 @@ jobs:
       - name: Update canvas refs in gradle.properties
         if: env.SKIP == 'false'
         run: |
-          UPSTREAM_PROPS=$(curl -s "https://raw.githubusercontent.com/CraftCanvasMC/Canvas/$CANVAS_BRANCH/gradle.properties")
+          UPSTREAM_PROPS=$(curl -s \
+            "https://raw.githubusercontent.com/CraftCanvasMC/Canvas/$CANVAS_BRANCH/gradle.properties")
           UPSTREAM_MC=$(echo "$UPSTREAM_PROPS" | grep '^mcVersion' | awk -F '=' '{print $2}' | tr -d ' \r')
           UPSTREAM_API=$(echo "$UPSTREAM_PROPS" | grep '^apiVersion' | awk -F '=' '{print $2}' | tr -d ' \r')
 
@@ -157,23 +164,35 @@ jobs:
       - name: Open issue on apply failure
         if: env.APPLY_FAILED == 'true' && env.SKIP == 'false'
         run: |
-          gh issue create \
-            --title "[BOT] Failed to apply patches after Canvas update" \
-            --body "Failed to apply surf-canvas patches after updating Canvas to [\`$LATEST_COMMIT\`](https://github.com/CraftCanvasMC/Canvas/commit/$LATEST_COMMIT) on branch \`$CANVAS_BRANCH\`." \
-            --label "upstream-update"
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues" \
+            -d "{
+              \"title\": \"[BOT] Failed to apply patches after Canvas update\",
+              \"body\": \"Failed to apply surf-canvas patches after updating Canvas to [\`$LATEST_COMMIT\`](https://github.com/CraftCanvasMC/Canvas/commit/$LATEST_COMMIT) on branch \`$CANVAS_BRANCH\`.\",
+              \"labels\": [\"upstream-update\"]
+            }"
 
       - name: Open issue on build failure
         if: env.BUILD_FAILED == 'true' && env.APPLY_FAILED != 'true' && env.SKIP == 'false'
         run: |
-          gh issue create \
-            --title "[BOT] Build failed after Canvas update" \
-            --body "Patches applied successfully but compilation failed after updating Canvas to [\`$LATEST_COMMIT\`](https://github.com/CraftCanvasMC/Canvas/commit/$LATEST_COMMIT) on branch \`$CANVAS_BRANCH\`." \
-            --label "upstream-update"
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues" \
+            -d "{
+              \"title\": \"[BOT] Build failed after Canvas update\",
+              \"body\": \"Patches applied successfully but compilation failed after updating Canvas to [\`$LATEST_COMMIT\`](https://github.com/CraftCanvasMC/Canvas/commit/$LATEST_COMMIT) on branch \`$CANVAS_BRANCH\`.\",
+              \"labels\": [\"upstream-update\"]
+            }"
 
       - name: Generate commit message
         if: env.BUILD_FAILED != 'true' && env.APPLY_FAILED != 'true' && env.SKIP == 'false'
         run: |
-          UPDATES=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+          UPDATES=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/CraftCanvasMC/Canvas/compare/$CURRENT_COMMIT...$LATEST_COMMIT" \
             | jq -r '.commits[] | "CraftCanvasMC/Canvas@\(.sha[:7]) - \(.commit.message | split("\n")[0])"')
 
