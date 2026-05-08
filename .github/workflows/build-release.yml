@@ -72,7 +72,7 @@ jobs:
       - name: Locate Paperclip JAR
         shell: bash
         run: |
-          JAR_PATH=$(find surf-canvas-server/build/libs -name "*paperclip*reobf*.jar" -type f | head -n 1)
+          JAR_PATH=$(find surf-canvas-server/build/libs -name "*paperclip*.jar" -type f | head -n 1)
 
           if [ -z "$JAR_PATH" ]; then
             echo "::error::No paperclip JAR found in surf-canvas-server/build/libs" >&2
