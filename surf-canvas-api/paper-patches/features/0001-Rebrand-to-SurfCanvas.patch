@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: twisti <76837088+twisti-dev@users.noreply.github.com>
+Date: Fri, 8 May 2026 17:03:14 +0200
+Subject: [PATCH] Rebrand to SurfCanvas
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+index e394a3643ad582cd823ac61b8ce56b8b069c3ab4..4771b17f585bca8521da90389bf238de15f30770 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -28,6 +28,12 @@ public interface ServerBuildInfo {
+      */
+     Key BRAND_CANVAS_ID = Key.key("canvasmc", "canvas");
+     // Canvas end - Rebrand
++    // SurfCanvas start - Rebrand
++    /**
++     * The brand id for SurfCanvas
++     */
++    Key BRAND_SURF_CANVAS_ID = Key.key("slne", "surfcanvas");
++    // SurfCanvas end - Rebrand
+ 
+     /**
+      * Gets the {@code ServerBuildInfo}.
