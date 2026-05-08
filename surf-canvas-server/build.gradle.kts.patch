@@ -1,5 +1,34 @@
 --- a/canvas-server/build.gradle.kts
 +++ b/canvas-server/build.gradle.kts
+@@ -48,7 +_,27 @@
+         }
+     }
+ 
+-    activeFork = canvas
++    val surfCanvas = forks.register("surfCanvas") {
++        forks = canvas
++        upstream.patchRepo("paperServer") {
++            upstreamRepo = canvas.patchedRepo("paperServer")
++            patchesDir = rootDirectory.dir("surf-canvas-server/paper-patches")
++            outputDir = rootDirectory.dir("paper-server")
++        }
++        upstream.patchRepo("foliaServer") {
++            upstreamRepo = canvas.patchedRepo("foliaServer")
++            patchesDir = rootDirectory.dir("surf-canvas-server/folia-patches")
++            outputDir = rootDirectory.dir("folia-server")
++        }
++        upstream.patchDir("canvasServer") {
++            upstreamPath = "canvas-server"
++            excludes = setOf("src/minecraft", "paper-patches", "folia-patches", "minecraft-patches", "build.gradle.kts", "build.gradle.kts.patch")
++            patchesDir = rootDirectory.dir("surf-canvas-server/canvas-patches")
++            outputDir = rootDirectory.dir("canvas-server")
++        }
++    }
++
++    activeFork = surfCanvas
+ 
+ 
+     spigot {
 @@ -172,7 +_,7 @@
  }
  

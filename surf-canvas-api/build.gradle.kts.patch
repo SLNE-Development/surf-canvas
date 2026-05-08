@@ -1,5 +1,31 @@
 --- a/canvas-api/build.gradle.kts
 +++ b/canvas-api/build.gradle.kts
+@@ -104,20 +_,25 @@
+             srcDir(generatedDir)
+             srcDir(file("../paper-api/src/main/java"))
+             srcDir(file("../folia-api/src/main/java"))
++            srcDir(file("../canvas-api/src/main/java"))
+         }
+         resources {
+             srcDir(file("../paper-api/src/main/resources"))
+             srcDir(file("../folia-api/src/main/resources"))
++            srcDir(file("../canvas-api/src/main/resources"))
++
+         }
+     }
+     test {
+         java {
+             srcDir(file("../paper-api/src/test/java"))
+             srcDir(file("../folia-api/src/test/java"))
++            srcDir(file("../canvas-api/src/test/java"))
+         }
+         resources {
+             srcDir(file("../paper-api/src/test/resources"))
+             srcDir(file("../folia-api/src/test/resources"))
++            srcDir(file("../canvas-api/src/test/resources"))
+         }
+     }
+ }
 @@ -152,32 +_,34 @@
              suppressPomMetadataWarningsFor(it)
          }
