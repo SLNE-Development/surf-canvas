@@ -29,6 +29,25 @@
  
  
      spigot {
+@@ -139,12 +_,18 @@
+         resources { srcDir("../paper-server/src/main/resources") }
+         java { srcDir("../folia-server/src/main/java") }
+         resources { srcDir("../folia-server/src/main/resources") }
++        java { srcDir("../canvas-server/src/sources/java") }
++        resources { srcDir("../canvas-server/src/sources/resources") }
++        java { srcDir("../canvas-server/src/main/java") }
++        resources { srcDir("../canvas-server/src/main/resources") }
+     }
+     test {
+         java { srcDir("../paper-server/src/test/java") }
+         resources { srcDir("../paper-server/src/test/resources") }
+         java { srcDir("../folia-server/src/test/java") }
+         resources { srcDir("../folia-server/src/test/resources") }
++        java { srcDir("../canvas-server/src/test/java") }
++        resources { srcDir("../canvas-server/src/test/resources") }
+     }
+ }
+ val log4jPlugins = sourceSets.create("log4jPlugins") {
 @@ -172,7 +_,7 @@
  }
  
