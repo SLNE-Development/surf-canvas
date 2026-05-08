@@ -9,7 +9,7 @@ build/
 /surf-canvas-server/build.gradle.kts
 /surf-canvas-server/src/minecraft
 /canvas-api
-/canvas-server
+#/canvas-server
 /folia-api
 /folia-server
 /paper-server
