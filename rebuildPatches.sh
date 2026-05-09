@@ -13,6 +13,7 @@ fi
 set -e
 
 force_run=false
+minecraft_run=false
 
 for arg in "$@"; do
   case "$arg" in
@@ -20,64 +21,115 @@ for arg in "$@"; do
       force_run=true
       echo "Force mode enabled."
       ;;
+    --minecraft)
+      minecraft_run=true
+      echo "Minecraft patches mode enabled."
+      ;;
   esac
 done
 
-declare -A gradle_tasks
+declare -A scheduled_fixup
+declare -A scheduled_rebuild
 
-process_changes() {
+has_changes() {
   local dir="$1"
-  local project="$2"
+  [ -d "$dir" ] || return 1
+  (cd "$dir" && { ! git diff --quiet || ! git diff --cached --quiet; })
+}
+
+schedule() {
+  local label="$1"
+  local dir="$2"
+  local fixup_task="$3"
+  local rebuild_task="$4"
 
   if [ ! -d "$dir" ]; then
-    echo "Error: Directory '$dir' does not exist."
-    exit 1
+    echo "Skipping $label: directory '$dir' does not exist."
+    return
   fi
 
-  cd "$dir"
-  if $force_run || ! git diff --quiet || ! git diff --cached --quiet; then
-    echo "Changes detected in $dir. Scheduling rebuild."
-    gradle_tasks["fixup${project}FilePatches"]="true"
-    gradle_tasks["rebuild${project}FilePatches"]="true"
+  if $force_run || has_changes "$dir"; then
+    echo "Changes detected in $label ($dir). Scheduling rebuild."
+    scheduled_fixup["$fixup_task"]="true"
+    scheduled_rebuild["$rebuild_task"]="true"
   else
-    echo "No changes in $dir"
+    echo "No changes in $label ($dir)"
   fi
-  cd - > /dev/null
 }
 
-run_gradle_task() {
+run_task() {
   local task="$1"
-  if [ "${gradle_tasks[$task]}" = "true" ]; then
-    echo "Running: $task"
-    ./gradlew "$task" -Dpaperweight.debug=true || echo "Task '$task' failed, continuing..."
+  echo "Running: ./gradlew $task"
+  ./gradlew "$task" || echo "Task '$task' failed, continuing..."
+}
+
+run_if_fixup() {
+  local task="$1"
+  if [ "${scheduled_fixup[$task]}" = "true" ]; then
+    run_task "$task"
   else
-    echo "Skipping: $task (no changes)"
+    echo "Skipping fixup: $task"
   fi
 }
 
-process_changes "./canvas-api/"    "CanvasApi"
-process_changes "./canvas-server/" "CanvasServer"
+run_if_rebuild() {
+  local task="$1"
+  if [ "${scheduled_rebuild[$task]}" = "true" ]; then
+    run_task "$task"
+  else
+    echo "Skipping rebuild: $task"
+  fi
+}
 
-gradle_rebuild_task=false
+# --- API layers ---
+schedule "Canvas API"  "./canvas-api/"   "fixupCanvasApiFilePatches"              "rebuildCanvasApiFilePatches"
+schedule "Folia API"   "./folia-api/"    "fixupFoliaApiFilePatches"               "rebuildFoliaApiFilePatches"
+schedule "Paper API"   "./paper-api/"    "fixupPaperApiFilePatches"               "rebuildPaperApiFilePatches"
+
+# --- Server layers ---
+schedule "Canvas Server"  "./canvas-server/"  "surf-canvas-server:fixupCanvasServerFilePatches"  "surf-canvas-server:rebuildCanvasServerFilePatches"
+schedule "Folia Server"   "./folia-server/"   "surf-canvas-server:fixupFoliaServerFilePatches"   "surf-canvas-server:rebuildFoliaServerFilePatches"
+schedule "Paper Server"   "./paper-server/"   "surf-canvas-server:fixupPaperServerFilePatches"   "surf-canvas-server:rebuildPaperServerFilePatches"
+
+# --- Minecraft patches (explicit --minecraft flag or --force) ---
+if $minecraft_run || $force_run; then
+  echo "Scheduling Minecraft patches rebuild."
+  scheduled_fixup["surf-canvas-server:fixupMinecraftSourcePatches"]="true"
+  scheduled_fixup["surf-canvas-server:fixupMinecraftResourcePatches"]="true"
+  scheduled_rebuild["surf-canvas-server:rebuildMinecraftFilePatches"]="true"
+fi
+
+# --- Canvas single-file patches (build.gradle.kts changes) ---
 if $force_run \
    || ! git diff --quiet "./surf-canvas-server/build.gradle.kts" \
    || ! git diff --cached --quiet "./surf-canvas-server/build.gradle.kts" \
    || ! git diff --quiet "./surf-canvas-api/build.gradle.kts" \
    || ! git diff --cached --quiet "./surf-canvas-api/build.gradle.kts"; then
-  gradle_rebuild_task=true
+  echo "build.gradle.kts changes detected. Scheduling rebuildCanvasSingleFilePatches."
+  scheduled_rebuild["rebuildCanvasSingleFilePatches"]="true"
 fi
 
-if $gradle_rebuild_task; then
-  gradle_tasks["rebuildCanvasSingleFilePatches"]="true"
-fi
-
+echo ""
 echo "--- Running fixup tasks ---"
-run_gradle_task "fixupCanvasApiFilePatches"
-run_gradle_task "fixupCanvasServerFilePatches"
+run_if_fixup "fixupCanvasApiFilePatches"
+run_if_fixup "fixupFoliaApiFilePatches"
+run_if_fixup "fixupPaperApiFilePatches"
+run_if_fixup "surf-canvas-server:fixupCanvasServerFilePatches"
+run_if_fixup "surf-canvas-server:fixupFoliaServerFilePatches"
+run_if_fixup "surf-canvas-server:fixupPaperServerFilePatches"
+run_if_fixup "surf-canvas-server:fixupMinecraftSourcePatches"
+run_if_fixup "surf-canvas-server:fixupMinecraftResourcePatches"
 
+echo ""
 echo "--- Running rebuild tasks ---"
-run_gradle_task "rebuildCanvasApiFilePatches"
-run_gradle_task "rebuildCanvasServerFilePatches"
-run_gradle_task "rebuildCanvasSingleFilePatches"
+run_if_rebuild "rebuildCanvasApiFilePatches"
+run_if_rebuild "rebuildFoliaApiFilePatches"
+run_if_rebuild "rebuildPaperApiFilePatches"
+run_if_rebuild "surf-canvas-server:rebuildCanvasServerFilePatches"
+run_if_rebuild "surf-canvas-server:rebuildFoliaServerFilePatches"
+run_if_rebuild "surf-canvas-server:rebuildPaperServerFilePatches"
+run_if_rebuild "surf-canvas-server:rebuildMinecraftFilePatches"
+run_if_rebuild "rebuildCanvasSingleFilePatches"
 
+echo ""
 echo "Done!"
