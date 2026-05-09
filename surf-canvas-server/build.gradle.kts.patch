@@ -1,6 +1,6 @@
 --- a/canvas-server/build.gradle.kts
 +++ b/canvas-server/build.gradle.kts
-@@ -48,7 +_,27 @@
+@@ -49,12 +_,39 @@
          }
      }
  
@@ -19,7 +19,14 @@
 +        }
 +        upstream.patchDir("canvasServer") {
 +            upstreamPath = "canvas-server"
-+            excludes = setOf("src/minecraft", "paper-patches", "folia-patches", "minecraft-patches", "build.gradle.kts", "build.gradle.kts.patch")
++            excludes = setOf(
++                "src/minecraft",
++                "paper-patches",
++                "folia-patches",
++                "minecraft-patches",
++                "build.gradle.kts",
++                "build.gradle.kts.patch"
++            )
 +            patchesDir = rootDirectory.dir("surf-canvas-server/canvas-patches")
 +            outputDir = rootDirectory.dir("canvas-server")
 +        }
@@ -28,13 +35,24 @@
 +    activeFork = surfCanvas
  
  
-     spigot {
-@@ -139,12 +_,18 @@
+     updatingMinecraft {
+         // oldPaperCommit = "7e80cef5198561d0db53406127e5b8bc7af51577"
+-        // oldForkCommit = "b509110153b200548b9aedf1352cbb3742a61026"
++         oldForkCommit = "a5c43e0883903bcf709a9747fdf0936547cc929f"
+     }
+ }
+ 
+@@ -123,16 +_,20 @@
          resources { srcDir("../paper-server/src/main/resources") }
          java { srcDir("../folia-server/src/main/java") }
          resources { srcDir("../folia-server/src/main/resources") }
-+        java { srcDir("../canvas-server/src/sources/java") }
-+        resources { srcDir("../canvas-server/src/sources/resources") }
+-        if (!paperweight.updatingMinecraft.oldForkCommit.isPresent) {
+-            java { srcDir("src/sources/java") }
+-            resources { srcDir("src/sources/resources") }
++        if (true) {
++            java { srcDir("../canvas-server/src/sources/java") }
++            resources { srcDir("../canvas-server/src/sources/resources") }
+         }
 +        java { srcDir("../canvas-server/src/main/java") }
 +        resources { srcDir("../canvas-server/src/main/resources") }
      }
@@ -48,16 +66,16 @@
      }
  }
  val log4jPlugins = sourceSets.create("log4jPlugins") {
-@@ -172,7 +_,7 @@
+@@ -160,7 +_,7 @@
  }
  
  dependencies {
 -    implementation(projects.canvasApi)
 +    implementation(projects.surfCanvasApi)
-     implementation("ca.spottedleaf:concurrentutil:0.0.8")
+     implementation("ca.spottedleaf:concurrentutil:0.0.10")
      implementation("org.jline:jline-terminal-ffm:3.29.0") // use ffm on java 22+
      implementation("org.jline:jline-terminal-jni:3.29.0") // fall back to jni on java 21
-@@ -247,14 +_,14 @@
+@@ -226,14 +_,14 @@
          val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
          attributes(
              "Main-Class" to "org.bukkit.craftbukkit.Main",

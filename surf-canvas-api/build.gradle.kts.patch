@@ -1,6 +1,6 @@
 --- a/canvas-api/build.gradle.kts
 +++ b/canvas-api/build.gradle.kts
-@@ -104,20 +_,25 @@
+@@ -105,20 +_,25 @@
              srcDir(generatedDir)
              srcDir(file("../paper-api/src/main/java"))
              srcDir(file("../folia-api/src/main/java"))
@@ -26,7 +26,7 @@
          }
      }
  }
-@@ -152,32 +_,34 @@
+@@ -153,32 +_,34 @@
              suppressPomMetadataWarningsFor(it)
          }
          from(components["java"])
