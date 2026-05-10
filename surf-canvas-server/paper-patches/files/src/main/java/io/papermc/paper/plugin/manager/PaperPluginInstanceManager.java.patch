@@ -1,10 +1,11 @@
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-@@ -238,11 +_,31 @@
+@@ -238,11 +_,32 @@
              plugin.getLogger().info("Disabling %s".formatted(pluginName));
  
              this.server.getPluginManager().callEvent(new PluginDisableEvent(plugin));
-+            // SurfCanvas - Wrap setEnabled(false) in a thread with a 60s timeout to prevent hanging plugins from blocking world save
++            // SurfCanvas - Wrap setEnabled(false) in a thread with a timeout to prevent hanging plugins from blocking world save
++            int timeout = dev.slne.surf.SurfCanvasGlobalConfiguration.getInstance().plugin.shutdown.timeout;
              try {
 -                javaPlugin.setEnabled(false);
 -            } catch (Throwable ex) {
@@ -18,9 +19,9 @@
 +                }, "Plugin Disable - " + pluginName);
 +                disableThread.setDaemon(false);
 +                disableThread.start();
-+                disableThread.join(java.util.concurrent.TimeUnit.SECONDS.toMillis(60));
++                disableThread.join(java.util.concurrent.TimeUnit.SECONDS.toMillis(timeout));
 +                if (disableThread.isAlive()) {
-+                    this.server.getLogger().log(Level.SEVERE, "Plugin " + pluginName + " did not shut down within 60 seconds, interrupting");
++                    this.server.getLogger().log(Level.SEVERE, "Plugin " + pluginName + " did not shut down within {} seconds, interrupting", timeout);
 +                    disableThread.interrupt();
 +                    disableThread.join(java.util.concurrent.TimeUnit.SECONDS.toMillis(5));
 +                    if (disableThread.isAlive()) {
