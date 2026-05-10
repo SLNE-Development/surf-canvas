@@ -1,0 +1,10 @@
+--- a/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -295,6 +_,7 @@
+         org.bukkit.event.inventory.InventoryType.ENDER_CHEST.setDefaultSize(containers.enderChestSixRows ? 54 : 27);
+         net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.canvas$initPathTypeCache();
+         // Canvas end - pre start server config hook
++        dev.slne.surf.SurfCanvasGlobalConfiguration.getInstance(); // SurfCanvas - initialize global config
+         // Paper end - initialize global and world-defaults configuration
+         this.server.spark.enableEarlyIfRequested(); // Paper - spark
+         // Paper start - fix converting txt to json file; convert old users earlier after PlayerList creation but before file load/save
