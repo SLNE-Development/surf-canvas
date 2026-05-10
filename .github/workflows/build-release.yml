@@ -50,7 +50,7 @@ jobs:
         run: ./gradlew applyAllPatches --no-scan --stacktrace
 
       - name: Build Paperclip JAR
-        run: ./gradlew createMojmapPaperclipJar --no-scan --stacktrace
+        run: ./gradlew createPaperclipJar --no-scan --stacktrace
 
       - name: Determine version and release metadata
         shell: bash
