@@ -22,17 +22,26 @@ jobs:
   update-upstream:
     name: Update Upstream
     runs-on: self-hosted
+    environment: update-upstream
 
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
       - name: Checkout repo
         uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Authenticate
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "surf-canvas-upstream-bot[bot]"
+          git config --global user.email "surf-canvas-upstream-bot[bot]@users.noreply.github.com"
 
       - name: Resolve Canvas branch
         run: |
@@ -53,14 +62,14 @@ jobs:
       - name: Check if update is needed
         run: |
           OPEN_ISSUE=$(curl -s \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/issues?state=open&labels=upstream-update&per_page=1" \
             | jq -r '.[0].number // empty')
 
           CURRENT_COMMIT=$(grep '^canvasCommit' gradle.properties | awk -F '=' '{print $2}' | tr -d '[:space:]\r')
           LATEST_COMMIT=$(curl -s \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
             "https://api.github.com/repos/CraftCanvasMC/Canvas/commits/$CANVAS_BRANCH" \
             | jq -r '.sha' | tr -d '[:space:]\r')
 
@@ -165,7 +174,7 @@ jobs:
         if: env.APPLY_FAILED == 'true' && env.SKIP == 'false'
         run: |
           curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/issues" \
             -d "{
@@ -178,7 +187,7 @@ jobs:
         if: env.BUILD_FAILED == 'true' && env.APPLY_FAILED != 'true' && env.SKIP == 'false'
         run: |
           curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/issues" \
             -d "{
@@ -191,7 +200,7 @@ jobs:
         if: env.BUILD_FAILED != 'true' && env.APPLY_FAILED != 'true' && env.SKIP == 'false'
         run: |
           UPDATES=$(curl -s \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/CraftCanvasMC/Canvas/compare/$CURRENT_COMMIT...$LATEST_COMMIT" \
             | jq -r '.commits[] | "CraftCanvasMC/Canvas@\(.sha[:7]) - \(.commit.message | split("\n")[0])"')
@@ -202,8 +211,16 @@ jobs:
 
       - name: Commit and push
         if: env.BUILD_FAILED != 'true' && env.APPLY_FAILED != 'true' && env.SKIP == 'false'
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           git add .
           git restore --staged commit_message.txt
+          git diff --cached --quiet && {
+            echo "No changes to commit."
+            exit 0
+          }
+
           git commit -F commit_message.txt
-          git push origin HEAD
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git"
+          git push origin HEAD:master
