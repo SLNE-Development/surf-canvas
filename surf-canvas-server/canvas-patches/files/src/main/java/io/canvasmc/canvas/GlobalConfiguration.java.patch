@@ -1,0 +1,16 @@
+--- a/src/main/java/io/canvasmc/canvas/GlobalConfiguration.java
++++ b/src/main/java/io/canvasmc/canvas/GlobalConfiguration.java
+@@ -532,11 +_,13 @@
+                         .literal(" - purpur.enderchest.rows.two").endLine()
+                         .literal(" - purpur.enderchest.rows.one").endLine()
+                 );
++            option("enderChestPersistHiddenRows").docs("Whether to persist the ender chest rows if a player no longer has the permission for it");
+         }
+ 
+         public int barrelRows = 3;
+         public boolean enderChestSixRows = false;
+         public boolean enderChestPermissionRows = false;
++        public boolean enderChestPersistHiddenRows = true;
+     }
+ 
+     public boolean blacklistNonPlayerEntitiesFromEnteringNetherPortals = false;
