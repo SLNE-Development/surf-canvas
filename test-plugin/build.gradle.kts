@@ -1,16 +1,5 @@
-version = "1.0.0-SNAPSHOT"
-
-dependencies {
-    compileOnly(project(":surf-canvas-api"))
-}
-
-tasks.processResources {
-    val props = mapOf(
-        "version" to project.version,
-        "apiversion" to "\"${rootProject.providers.gradleProperty("apiVersion").get()}\"",
-    )
-    inputs.properties(props)
-    filesMatching("paper-plugin.yml") {
-        expand(props)
-    }
+paperPluginYaml {
+    main = "dev.slne.surf.testplugin.TestPlugin"
+    bootstrapper = "dev.slne.surf.testplugin.TestPluginBootstrap"
+    loader = "dev.slne.surf.testplugin.TestPluginLoader"
 }
