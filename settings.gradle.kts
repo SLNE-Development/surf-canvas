@@ -19,7 +19,7 @@ if (!file(".git").exists()) {
     val errorText = """
         =====================[ ERROR ]=====================
          The surf-canvas project directory is not a properly cloned Git repository.
-         
+
          In order to build Surf from source you must clone
          the surf-canvas repository using Git, not download a code
          zip from GitHub.
@@ -38,13 +38,31 @@ for (name in listOf("surf-canvas-api", "surf-canvas-server")) {
     findProject(":$projName")!!.projectDir = file(name)
 }
 
-rootDir.listFiles()
-    ?.filter { it.isDirectory && (it.name.endsWith("-debug", ignoreCase = true) || it.name.endsWith("-plugin", ignoreCase = true)) }
-    ?.forEach { dir ->
-        val projName = dir.name.lowercase(Locale.ENGLISH)
-        include(projName)
-        findProject(":$projName")!!.projectDir = dir
+optionalInclude("test-plugin")
+
+fun optionalInclude(name: String, op: (ProjectDescriptor.() -> Unit)? = null) {
+    val settingsFile = file("$name.settings.gradle.kts")
+    if (settingsFile.exists()) {
+        apply(from = settingsFile)
+        findProject(":$name")?.let { op?.invoke(it) }
+    } else {
+        settingsFile.writeText(
+            """
+            // Uncomment to enable the '$name' project
+            // include(":$name")
+
+            """.trimIndent()
+        )
     }
+}
+
+//rootDir.listFiles()
+//    ?.filter { it.isDirectory && (it.name.endsWith("-debug", ignoreCase = true) || it.name.endsWith("-plugin", ignoreCase = true)) }
+//    ?.forEach { dir ->
+//        val projName = dir.name.lowercase(Locale.ENGLISH)
+//        include(projName)
+//        findProject(":$projName")!!.projectDir = dir
+//    }
 
 gradle.lifecycle.beforeProject {
     val mcVersion = providers.gradleProperty("mcVersion").get().trim()

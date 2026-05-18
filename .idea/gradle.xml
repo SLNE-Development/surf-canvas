@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="GradleMigrationSettings" migrationVersion="1" />
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
@@ -12,13 +11,7 @@
             <option value="$PROJECT_DIR$/surf-canvas-server" />
           </set>
         </option>
-        <option name="myGradleHome" value="" />
-      </GradleProjectSettings>
-      <GradleProjectSettings>
-        <option name="externalProjectPath" value="$PROJECT_DIR$/surf-canvas-api" />
-        <option name="myGradleHome" value="" />
       </GradleProjectSettings>
     </option>
-    <option name="parallelModelFetch" value="true" />
   </component>
 </project>

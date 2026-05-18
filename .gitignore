@@ -14,6 +14,7 @@ build/
 /folia-server
 /paper-server
 /paper-api
+test-plugin.settings.gradle.kts
 
 ### IntelliJ IDEA ###
 .idea/modules.xml

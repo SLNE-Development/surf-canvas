@@ -1,0 +1,12 @@
+name: SurfCanvas-Test-Plugin
+version: ${version}
+main: dev.slne.surf.testplugin.TestPlugin
+description: SurfCanvas Test Plugin
+author: SLNE Development
+api-version: ${apiversion}
+load: STARTUP
+bootstrapper: dev.slne.surf.testplugin.TestPluginBootstrap
+loader: dev.slne.surf.testplugin.TestPluginLoader
+defaultPerm: FALSE
+permissions:
+dependencies:
