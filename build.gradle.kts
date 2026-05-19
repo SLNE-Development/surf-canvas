@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     java
-    id("io.canvasmc.weaver.patcher") version "2.4.3"
+    id("io.canvasmc.weaver.patcher") version "2.4.4"
     id("xyz.jpenilla.resource-factory-paper-convention") version "1.3.1" apply false
 }
 
