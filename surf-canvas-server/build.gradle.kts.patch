@@ -75,7 +75,7 @@
      implementation("ca.spottedleaf:concurrentutil:0.0.10")
      implementation("org.jline:jline-terminal-ffm:3.29.0") // use ffm on java 22+
      implementation("org.jline:jline-terminal-jni:3.29.0") // fall back to jni on java 21
-@@ -226,14 +_,14 @@
+@@ -227,16 +_,16 @@
          val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
          attributes(
              "Main-Class" to "org.bukkit.craftbukkit.Main",
@@ -89,6 +89,8 @@
 -            "Specification-Vendor" to "Canvas Team",
 -            "Brand-Id" to "canvasmc:canvas",
 -            "Brand-Name" to "Canvas",
+             "Brand-Vendor" to "Canvas Team",
+             "Brand-Website" to "https://canvasmc.io",
 +            "Specification-Vendor" to "SLNE Development Team",
 +            "Brand-Id" to "slne:surfcanvas",
 +            "Brand-Name" to "SurfCanvas",
