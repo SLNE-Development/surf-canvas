@@ -1,6 +1,6 @@
 --- a/canvas-server/build.gradle.kts
 +++ b/canvas-server/build.gradle.kts
-@@ -49,12 +_,39 @@
+@@ -48,12 +_,39 @@
          }
      }
  
@@ -36,23 +36,18 @@
  
  
      updatingMinecraft {
-         // oldPaperCommit = "711c5de2b05df39b72c44ff54e9f9381f8d153cb"
--        // oldForkCommit = "318e84cd33e03491c9422fb8b96ba69c332b98b9"
+         // oldPaperCommit = "d4fe85375af18bfa88f44d7c1e6a61904ae550cc"
+-        // oldForkCommit = "58d6715718521ea774b786fa9ca1e6fc2db14702"
 +        // oldForkCommit = "f519c2f7d67c8ae5ce767be1d52f006ef942ffc0"
      }
  }
  
-@@ -123,16 +_,20 @@
+@@ -122,12 +_,18 @@
          resources { srcDir("../paper-server/src/main/resources") }
          java { srcDir("../folia-server/src/main/java") }
          resources { srcDir("../folia-server/src/main/resources") }
--        if (!paperweight.updatingMinecraft.oldForkCommit.isPresent) {
--            java { srcDir("src/sources/java") }
--            resources { srcDir("src/sources/resources") }
-+        if (true) {
-+            java { srcDir("../canvas-server/src/sources/java") }
-+            resources { srcDir("../canvas-server/src/sources/resources") }
-         }
++        java { srcDir("../canvas-server/src/sources/java") }
++        resources { srcDir("../canvas-server/src/sources/resources") }
 +        java { srcDir("../canvas-server/src/main/java") }
 +        resources { srcDir("../canvas-server/src/main/resources") }
      }
@@ -66,7 +61,7 @@
      }
  }
  val log4jPlugins = sourceSets.create("log4jPlugins") {
-@@ -160,7 +_,7 @@
+@@ -155,7 +_,7 @@
  }
  
  dependencies {
@@ -75,7 +70,7 @@
      implementation("ca.spottedleaf:concurrentutil:0.0.10")
      implementation("org.jline:jline-terminal-ffm:3.29.0") // use ffm on java 22+
      implementation("org.jline:jline-terminal-jni:3.29.0") // fall back to jni on java 21
-@@ -227,16 +_,16 @@
+@@ -222,16 +_,16 @@
          val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
          attributes(
              "Main-Class" to "org.bukkit.craftbukkit.Main",

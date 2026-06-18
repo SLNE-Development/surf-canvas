@@ -3,7 +3,7 @@
 @@ -263,6 +_,7 @@
          WeatherCommand.register(this.dispatcher);
          WorldBorderCommand.register(this.dispatcher);
-         io.canvasmc.canvas.command.RootCommandTree.INSTANCE.build(this.dispatcher); // Canvas - Rebrand - register commands
+         io.canvasmc.canvas.command.CanvasCommands.INSTANCE.build(this.dispatcher); // Canvas - Rebrand - register commands
 +        dev.slne.surf.command.SurfCanvasRootCommandTree.INSTANCE.build(this.dispatcher); // SurfCanvas - register commands
          if (JvmProfiler.INSTANCE.isAvailable()) {
              JfrCommand.register(this.dispatcher);

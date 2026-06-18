@@ -1,14 +1,32 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: twisti <76837088+twisti-dev@users.noreply.github.com>
-Date: Fri, 8 May 2026 17:02:40 +0200
+Date: Thu, 18 Jun 2026 16:51:14 +0200
 Subject: [PATCH] Rebrand to SurfCanvas
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
-index 4d2936f6818c38e2844cba78ffad339e93ff29ab..7ca316df27c4f33750300c241107fae735e79e31 100644
+index 30815c8970b1f1c88a3c7bb5fd36efd915f1687d..32e6b29464ded723f9b0c21195407d719984a85c 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
-@@ -40,10 +40,11 @@ public class PaperVersionFetcher implements VersionFetcher {
+@@ -15,9 +15,7 @@ import java.net.HttpURLConnection;
+ import java.net.URI;
+ import java.net.URL;
+ import java.nio.charset.StandardCharsets;
+-import java.util.Optional;
+ import java.util.OptionalInt;
+-import java.util.stream.StreamSupport;
+ import net.kyori.adventure.text.Component;
+ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+ import net.kyori.adventure.text.event.ClickEvent;
+@@ -28,7 +26,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
+ import org.checkerframework.framework.qual.DefaultQualifier;
+ import org.apache.logging.log4j.LogManager;
+ import org.slf4j.Logger;
+-import java.util.List;
+ 
+ import static net.kyori.adventure.text.Component.text;
+ import static net.kyori.adventure.text.format.TextColor.color;
+@@ -40,10 +37,11 @@ public class PaperVersionFetcher implements VersionFetcher {
      private static final ComponentLogger COMPONENT_LOGGER = ComponentLogger.logger(LogManager.getRootLogger().getName());
      private static final int DISTANCE_ERROR = -1;
      private static final int DISTANCE_UNKNOWN = -2;
@@ -23,7 +41,7 @@ index 4d2936f6818c38e2844cba78ffad339e93ff29ab..7ca316df27c4f33750300c241107fae7
      private static final Gson GSON = new Gson();
  
      @Override
-@@ -65,66 +66,39 @@ public class PaperVersionFetcher implements VersionFetcher {
+@@ -65,67 +63,39 @@ public class PaperVersionFetcher implements VersionFetcher {
      }
  
      public static void getUpdateStatusStartupMessage() {
@@ -51,7 +69,7 @@ index 4d2936f6818c38e2844cba78ffad339e93ff29ab..7ca316df27c4f33750300c241107fae7
 -                case 0 -> apiResult.ifPresent(result -> {
 -                    COMPONENT_LOGGER.warn(text("*************************************************************************************"));
 -                    COMPONENT_LOGGER.warn(text("You are running the latest build for your Minecraft version (" + BUILD_INFO.minecraftVersionId() + ")"));
--                    COMPONENT_LOGGER.warn(text("However, you are " + result.distance() + " release(s) behind the latest stable release (" + result.latestVersion() + ")!"));
+-                    COMPONENT_LOGGER.warn(text("However, you are " + result.distance() + " release" + (result.distance() == 1 ? "" : "s") + " behind the latest stable release (" + result.latestVersion() + ")!"));
 -                    COMPONENT_LOGGER.warn(text("It is recommended that you update as soon as possible"));
 -                    COMPONENT_LOGGER.warn(text(DOWNLOAD_PAGE));
 -                    COMPONENT_LOGGER.warn(text("*************************************************************************************"));
@@ -59,10 +77,11 @@ index 4d2936f6818c38e2844cba78ffad339e93ff29ab..7ca316df27c4f33750300c241107fae7
 -                case DISTANCE_UNKNOWN -> COMPONENT_LOGGER.warn(text("*** You are running an unknown version! Cannot fetch version info ***"));
 -                default -> {
 -                    if (apiResult.isPresent()) {
--                        COMPONENT_LOGGER.warn(text("*** You are running an outdated version of Minecraft, which is " + apiResult.get().distance() + " release(s) and " + distance + " build(s) behind!"));
+-                        final MinecraftVersionFetcher result = apiResult.get();
+-                        COMPONENT_LOGGER.warn(text("*** You are running an outdated version of Minecraft, which is " + result.distance() + " release" + (result.distance() == 1 ? "" : "s") + " and " + distance + " build" + (distance == 1 ? "" : "s") + " behind!"));
 -                        COMPONENT_LOGGER.warn(text("*** Please update to the latest stable version on " + DOWNLOAD_PAGE + " ***"));
 -                    } else {
--                        COMPONENT_LOGGER.info(text("*** Currently you are " + distance + " build(s) behind ***"));
+-                        COMPONENT_LOGGER.info(text("*** Currently you are " + distance + " build" + (distance == 1 ? "" : "s") + " behind ***"));
 -                        COMPONENT_LOGGER.info(text("*** It is highly recommended to download the latest build from " + DOWNLOAD_PAGE + " ***"));
 -                    }
 -                }
@@ -108,7 +127,7 @@ index 4d2936f6818c38e2844cba78ffad339e93ff29ab..7ca316df27c4f33750300c241107fae7
                  .append(Component.newline())
                  .append(text("Download the new version at: ")
                      .append(text(DOWNLOAD_PAGE, NamedTextColor.GOLD)
-@@ -133,114 +107,60 @@ public class PaperVersionFetcher implements VersionFetcher {
+@@ -134,119 +104,60 @@ public class PaperVersionFetcher implements VersionFetcher {
          };
      }
  
@@ -169,6 +188,11 @@ index 4d2936f6818c38e2844cba78ffad339e93ff29ab..7ca316df27c4f33750300c241107fae7
 -                                final int currentIndex = versionList.indexOf(currentVersion);
 -                                final int latestIndex = versionList.indexOf(latestVersion);
 -                                final int distance = currentIndex - latestIndex;
+-                                if (distance < 0) {
+-                                    // Avoid logging warnings for early unpublished snapshot builds
+-                                    return Optional.empty();
+-                                }
+-
 -                                return Optional.of(new MinecraftVersionFetcher(latestVersion, distance));
 -                            }
 -                        } catch (final JsonSyntaxException ex) {
@@ -258,11 +282,24 @@ index 4d2936f6818c38e2844cba78ffad339e93ff29ab..7ca316df27c4f33750300c241107fae7
          }
      }
  
+diff --git a/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java b/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java
+index 3fcdea18a3eed08fb7eec2bf81cd52321d120989..8b1993048c670f0fba55d46293f3525bd5547f72 100644
+--- a/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java
++++ b/src/main/java/io/papermc/paper/PaperServerInternalAPIBridge.java
+@@ -181,7 +181,7 @@ public class PaperServerInternalAPIBridge implements InternalAPIBridge {
+ 
+     @Override
+     public VersionFetcher getVersionFetcher() {
+-        return new io.canvasmc.canvas.util.version.CanvasVersionFetcher(); // Canvas - Rebrand
++        return new PaperVersionFetcher(); // Canvas - Rebrand // SurfCanvas - Rebrand
+     }
+ 
+     @Override
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-index 55ebf9c9036468418128501fb192eeb3658194d0..b6d918667444863b29466e0c0fdee82d49ca851b 100644
+index 0e9dcc8bcabcb7c6fbf93a470f8f53b45ea51fbe..35f01ef7efaccb7bd4f81cabfd91805a72bd6f28 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-@@ -32,6 +32,7 @@ public record ServerBuildInfoImpl(
+@@ -38,6 +38,7 @@ public record ServerBuildInfoImpl(
  
      private static final String BRAND_PAPER_NAME = "Paper";
      private static final String BRAND_CANVAS_NAME = "Canvas"; // Canvas - Rebrand
@@ -270,7 +307,7 @@ index 55ebf9c9036468418128501fb192eeb3658194d0..b6d918667444863b29466e0c0fdee82d
  
      private static final String BUILD_DEV = "DEV";
  
-@@ -43,9 +44,9 @@ public record ServerBuildInfoImpl(
+@@ -49,9 +50,9 @@ public record ServerBuildInfoImpl(
          this(
              getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
                  .map(Key::key)
@@ -282,24 +319,3 @@ index 55ebf9c9036468418128501fb192eeb3658194d0..b6d918667444863b29466e0c0fdee82d
              SharedConstants.getCurrentVersion().id(),
              SharedConstants.getCurrentVersion().name(),
              getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
-diff --git a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
-index d3df5057059ce22ea97a62954d0607f717dc2c96..6c98c7186c77b6f2ee43afdbf5caced3cde16fa9 100644
---- a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
-+++ b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
-@@ -1,6 +1,7 @@
- package org.bukkit.craftbukkit.util;
- 
- import ca.spottedleaf.moonrise.common.PlatformHooks;
-+import com.destroystokyo.paper.PaperVersionFetcher;
- import com.google.common.base.Preconditions;
- import com.google.common.collect.Multimap;
- import com.google.common.io.Files;
-@@ -491,7 +492,7 @@ public final class CraftMagicNumbers implements UnsafeValues {
- 
-     @Override
-     public com.destroystokyo.paper.util.VersionFetcher getVersionFetcher() {
--        return new io.canvasmc.canvas.util.version.CanvasVersionFetcher(); // Canvas - Rebrand
-+        return new PaperVersionFetcher(); // Canvas - Rebrand // SurfCanvas - Rebrand
-     }
- 
-     @Override
