@@ -34,9 +34,9 @@ public class SurfCanvasRootCommandTree {
         INSTANCE.register(SurfCanvasReloadCommand.class);
     }
 
-    private final List<Command> subCommands = new LinkedList<>();
+    private final List<SubCommand> subCommands = new LinkedList<>();
 
-    private Component buildDetailComponent(Command subCommand) {
+    private Component buildDetailComponent(SubCommand subCommand) {
         String name = subCommand.getName();
         String description = subCommand.getDescription();
         boolean selfCmd = subCommand.isAllowedSelfCommand();
@@ -72,7 +72,7 @@ public class SurfCanvasRootCommandTree {
         LiteralArgumentBuilder<CommandSourceStack> root = literal("surfcanvas")
             .requires(source -> source.getSender().isOp() || source.getSender().hasPermission("surfcanvas.command"));
 
-        for (Command subCommand : subCommands) {
+        for (SubCommand subCommand : subCommands) {
             String name = subCommand.getName();
 
             root.then(subCommand.construct(literal(name)
@@ -98,7 +98,7 @@ public class SurfCanvasRootCommandTree {
                     .append(Component.text("----", SECONDARY))
                     .appendNewline();
 
-                for (Command subCommand : subCommands) {
+                for (SubCommand subCommand : subCommands) {
                     String name = subCommand.getName();
                     if (!bukkitSender.hasPermission("surfcanvas.command." + name)) {
                         continue;
@@ -131,7 +131,7 @@ public class SurfCanvasRootCommandTree {
         dispatcher.register(root);
     }
 
-    public void register(Class<? extends Command> command) {
+    public void register(Class<? extends SubCommand> command) {
         try {
             if (command.getDeclaredConstructor().getParameterCount() != 0) {
                 throw new IllegalArgumentException("Command must have no-arg constructor");

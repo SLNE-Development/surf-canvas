@@ -1,15 +1,16 @@
 package dev.slne.surf.command.sub;
 
-import com.mojang.brigadier.builder.*;
-import dev.slne.surf.*;
-import io.canvasmc.canvas.command.*;
-import net.minecraft.commands.*;
-import net.minecraft.network.chat.*;
-import net.minecraft.util.*;
-import org.jspecify.annotations.*;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import dev.slne.surf.SurfCanvasGlobalConfiguration;
+import io.canvasmc.canvas.command.SubCommand;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 @NullMarked
-public class SurfCanvasReloadCommand implements Command {
+public class SurfCanvasReloadCommand implements SubCommand {
     @Override
     public String getName() {
         return "reload";
