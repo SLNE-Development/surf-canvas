@@ -1,6 +1,6 @@
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-@@ -238,11 +_,32 @@
+@@ -232,11 +_,32 @@
              plugin.getLogger().info("Disabling %s".formatted(pluginName));
  
              this.server.getPluginManager().callEvent(new PluginDisableEvent(plugin));
@@ -35,4 +35,4 @@
 +            // SurfCanvas end
  
              // Flush async appender before unloading, avoids issues when a log message with class context
-             // tries to print after it's source has unloaded (i.e., Guice enhanced errors)
+             // tries to print after its source has unloaded (i.e., Guice enhanced errors)

@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand to SurfCanvas
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
-index 30815c8970b1f1c88a3c7bb5fd36efd915f1687d..32e6b29464ded723f9b0c21195407d719984a85c 100644
+index ba32d58c33c65b1384baa7616da64f7a4a1f0d1d..32e6b29464ded723f9b0c21195407d719984a85c 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
 @@ -15,9 +15,7 @@ import java.net.HttpURLConnection;
@@ -30,8 +30,8 @@ index 30815c8970b1f1c88a3c7bb5fd36efd915f1687d..32e6b29464ded723f9b0c21195407d71
      private static final ComponentLogger COMPONENT_LOGGER = ComponentLogger.logger(LogManager.getRootLogger().getName());
      private static final int DISTANCE_ERROR = -1;
      private static final int DISTANCE_UNKNOWN = -2;
--    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/folia"; // Folia
--    private static final String REPOSITORY = "PaperMC/Folia"; // Folia
+-    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper";
+-    private static final String REPOSITORY = "PaperMC/Paper";
 +    // SurfCanvas - replace Paper download page and repository
 +    private static final String DOWNLOAD_PAGE = "https://github.com/SLNE-Development/surf-canvas/releases";
 +    private static final String REPOSITORY = "SLNE-Development/surf-canvas";
@@ -139,7 +139,7 @@ index 30815c8970b1f1c88a3c7bb5fd36efd915f1687d..32e6b29464ded723f9b0c21195407d71
 +    // SurfCanvas - check against our own GitHub releases instead of Paper's API
 +    private static int fetchDistanceFromGitHubReleases(final int currentBuild) {
          try {
--            final URL versionsUrl = URI.create("https://fill.papermc.io/v3/projects/folia").toURL(); // Folia
+-            final URL versionsUrl = URI.create("https://fill.papermc.io/v3/projects/paper").toURL();
 -            final HttpURLConnection connection = (HttpURLConnection) versionsUrl.openConnection();
 +            final URL url = URI.create("https://api.github.com/repos/" + REPOSITORY + "/releases").toURL();
 +            final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -175,7 +175,7 @@ index 30815c8970b1f1c88a3c7bb5fd36efd915f1687d..32e6b29464ded723f9b0c21195407d71
                      }
 -
 -                    try {
--                        final URL buildsUrl = URI.create("https://fill.papermc.io/v3/projects/folia/versions/" + latestVersion + "/builds/latest").toURL(); // Folia
+-                        final URL buildsUrl = URI.create("https://fill.papermc.io/v3/projects/paper/versions/" + latestVersion + "/builds/latest").toURL();
 -                        final HttpURLConnection connection2 = (HttpURLConnection) buildsUrl.openConnection();
 -                        connection2.setConnectTimeout(5000);
 -                        connection2.setReadTimeout(5000);
@@ -218,7 +218,7 @@ index 30815c8970b1f1c88a3c7bb5fd36efd915f1687d..32e6b29464ded723f9b0c21195407d71
  
 -    private static int fetchDistanceFromSiteApi(final int jenkinsBuild) {
 -        try {
--            final URL buildsUrl = URI.create("https://fill.papermc.io/v3/projects/folia/versions/" + PaperVersionFetcher.BUILD_INFO.minecraftVersionId() + "/builds").toURL(); // Folia
+-            final URL buildsUrl = URI.create("https://fill.papermc.io/v3/projects/paper/versions/" + PaperVersionFetcher.BUILD_INFO.minecraftVersionId() + "/builds").toURL();
 -            final HttpURLConnection connection = (HttpURLConnection) buildsUrl.openConnection();
 -            connection.setConnectTimeout(5000);
 -            connection.setReadTimeout(5000);
@@ -296,26 +296,26 @@ index 3fcdea18a3eed08fb7eec2bf81cd52321d120989..8b1993048c670f0fba55d46293f3525b
  
      @Override
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-index 0e9dcc8bcabcb7c6fbf93a470f8f53b45ea51fbe..35f01ef7efaccb7bd4f81cabfd91805a72bd6f28 100644
+index 5681dbb4c3dcf7ffd60db5074c8164740144460a..d0048b3aba37ca7ce2f4389dbeac7b77cb5150a4 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-@@ -38,6 +38,7 @@ public record ServerBuildInfoImpl(
- 
+@@ -39,6 +39,7 @@ public record ServerBuildInfoImpl(
      private static final String BRAND_PAPER_NAME = "Paper";
-     private static final String BRAND_CANVAS_NAME = "Canvas"; // Canvas - Rebrand
+     // Canvas start - Rebrand
+     private static final String BRAND_CANVAS_NAME = "Canvas";
 +    private static final String BRAND_SURF_CANVAS = "SurfCanvas"; // SurfCanvas - Rebrand
  
-     private static final String BUILD_DEV = "DEV";
- 
-@@ -49,9 +50,9 @@ public record ServerBuildInfoImpl(
+     // private static final Key BRAND_CANVAS_ID = Key.key("canvasmc", "canvas");
+     // private static final Key BRAND_FOLIA_ID = Key.key("papermc", "folia");
+@@ -54,9 +55,9 @@ public record ServerBuildInfoImpl(
          this(
              getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
                  .map(Key::key)
--                .orElse(BRAND_CANVAS_ID), // Folia // Canvas - Rebrand
-+                .orElse(BRAND_SURF_CANVAS_ID), // Folia // Canvas - Rebrand // SurfCanvas - Rebrand
+-                .orElse(BRAND_CANVAS_ID), // Canvas - Rebrand
++                .orElse(BRAND_SURF_CANVAS_ID), // Canvas - Rebrand // SurfCanvas - Rebrand
              getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
--                .orElse(BRAND_CANVAS_NAME), // Folia // Canvas - Rebrand
-+                .orElse(BRAND_SURF_CANVAS), // Folia // Canvas - Rebrand // SurfCanvas - Rebrand
+-                .orElse(BRAND_CANVAS_NAME), // Canvas - Rebrand
++                .orElse(BRAND_SURF_CANVAS), // Canvas - Rebrand // SurfCanvas - Rebrand
              SharedConstants.getCurrentVersion().id(),
              SharedConstants.getCurrentVersion().name(),
              getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)

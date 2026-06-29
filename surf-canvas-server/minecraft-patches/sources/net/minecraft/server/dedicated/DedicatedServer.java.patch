@@ -1,6 +1,6 @@
 --- a/net/minecraft/server/dedicated/DedicatedServer.java
 +++ b/net/minecraft/server/dedicated/DedicatedServer.java
-@@ -295,6 +_,7 @@
+@@ -251,6 +_,7 @@
          org.bukkit.event.inventory.InventoryType.ENDER_CHEST.setDefaultSize(containers.enderChestSixRows ? 54 : 27);
          net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase.canvas$initPathTypeCache();
          // Canvas end - pre start server config hook
