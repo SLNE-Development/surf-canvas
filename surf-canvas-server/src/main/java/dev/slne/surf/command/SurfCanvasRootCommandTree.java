@@ -3,16 +3,20 @@ package dev.slne.surf.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.slne.surf.command.sub.SurfCanvasReloadCommand;
-import io.canvasmc.canvas.command.*;
-import net.kyori.adventure.text.*;
+import io.canvasmc.canvas.command.SubCommand;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.*;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import org.bukkit.command.CommandSender;
-import org.jspecify.annotations.*;
+import org.jspecify.annotations.NullMarked;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 
 import static net.minecraft.commands.Commands.literal;
 
@@ -68,7 +72,7 @@ public class SurfCanvasRootCommandTree {
         return builder.build();
     }
 
-    public void build(CommandDispatcher<CommandSourceStack> dispatcher) {
+    public void build(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context) {
         LiteralArgumentBuilder<CommandSourceStack> root = literal("surfcanvas")
             .requires(source -> source.getSender().isOp() || source.getSender().hasPermission("surfcanvas.command"));
 
@@ -76,21 +80,21 @@ public class SurfCanvasRootCommandTree {
             String name = subCommand.getName();
 
             root.then(subCommand.construct(literal(name)
-                .requires(source -> source.getSender().isOp() || source.getSender().hasPermission("surfcanvas.command." + name))));
+                .requires(source -> source.getSender().isOp() || source.getSender().hasPermission("surfcanvas.command." + name)), context));
 
             if (subCommand.isAllowedSelfCommand()) {
                 dispatcher.register(subCommand.construct(literal(name)
-                    .requires(source -> source.getSender().isOp() || source.getSender().hasPermission("surfcanvas.command." + name))));
+                    .requires(source -> source.getSender().isOp() || source.getSender().hasPermission("surfcanvas.command." + name)), context));
 
                 dispatcher.register(subCommand.construct(literal("surfcanvas:" + name)
-                    .requires(source -> source.getSender().isOp() || source.getSender().hasPermission("surfcanvas.command." + name))));
+                    .requires(source -> source.getSender().isOp() || source.getSender().hasPermission("surfcanvas.command." + name)), context));
             }
         }
 
         root.then(literal("help")
             .requires(source -> source.getSender().isOp() || source.getSender().hasPermission("surfcanvas.command.help"))
-            .executes(context -> {
-                CommandSender bukkitSender = context.getSource().getBukkitSender();
+            .executes(ctx -> {
+                CommandSender bukkitSender = ctx.getSource().getBukkitSender();
 
                 TextComponent.Builder builder = Component.text()
                     .append(Component.text("----", SECONDARY))

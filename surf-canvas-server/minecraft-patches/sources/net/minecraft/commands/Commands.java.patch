@@ -4,7 +4,7 @@
          WeatherCommand.register(this.dispatcher);
          WorldBorderCommand.register(this.dispatcher);
          io.canvasmc.canvas.command.CanvasCommands.INSTANCE.build(this.dispatcher, context); // Canvas - Rebrand - register commands
-+        dev.slne.surf.command.SurfCanvasRootCommandTree.INSTANCE.build(this.dispatcher); // SurfCanvas - register commands
++        dev.slne.surf.command.SurfCanvasRootCommandTree.INSTANCE.build(this.dispatcher, context); // SurfCanvas - register commands
          if (JvmProfiler.INSTANCE.isAvailable()) {
              JfrCommand.register(this.dispatcher);
          }

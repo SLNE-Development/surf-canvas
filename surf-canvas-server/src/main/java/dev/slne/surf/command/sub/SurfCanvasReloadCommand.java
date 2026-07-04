@@ -3,6 +3,7 @@ package dev.slne.surf.command.sub;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.slne.surf.SurfCanvasGlobalConfiguration;
 import io.canvasmc.canvas.command.SubCommand;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
@@ -27,13 +28,13 @@ public class SurfCanvasReloadCommand implements SubCommand {
     }
 
     @Override
-    public LiteralArgumentBuilder<CommandSourceStack> construct(LiteralArgumentBuilder<CommandSourceStack> base) {
-        return base.executes(context -> {
-            context.getSource().sendSystemMessage(
+    public LiteralArgumentBuilder<CommandSourceStack> construct(LiteralArgumentBuilder<CommandSourceStack> base, CommandBuildContext context) {
+        return base.executes(ctx -> {
+            ctx.getSource().sendSystemMessage(
                 Component.literal("Some configuration options cannot be changed at runtime or may work incorrectly after reloading.")
                     .withColor(CommonColors.RED)
             );
-            context.getSource().sendSystemMessage(
+            ctx.getSource().sendSystemMessage(
                 Component.literal("This command is unsupported. If you encounter issues, please run /stop")
                     .withColor(CommonColors.RED)
             );
@@ -41,7 +42,7 @@ public class SurfCanvasReloadCommand implements SubCommand {
             long start = System.nanoTime();
             SurfCanvasGlobalConfiguration.reload();
 
-            context.getSource()
+            ctx.getSource()
                 .sendSystemMessage(
                     Component.literal("Reloaded all SurfCanvas solid and patch configurations in " + String.format("%.2f", ((System.nanoTime() - start) / 1e+6)) + "ms")
                         .withColor(CommonColors.GREEN)
