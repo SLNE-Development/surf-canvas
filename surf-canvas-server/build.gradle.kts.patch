@@ -1,6 +1,6 @@
 --- a/canvas-server/build.gradle.kts
 +++ b/canvas-server/build.gradle.kts
-@@ -38,7 +_,29 @@
+@@ -39,7 +_,29 @@
          }
      }
  
@@ -31,7 +31,7 @@
  
      updatingMinecraft {
          // oldPaperCommit = "d4fe85375af18bfa88f44d7c1e6a61904ae550cc"
-@@ -111,10 +_,16 @@
+@@ -112,10 +_,16 @@
          resources { srcDir("../paper-server/src/main/resources") }
          java { srcDir("/src/main/java"); }
          resources { srcDir("/src/main/resources") }
@@ -48,7 +48,7 @@
      }
  }
  val log4jPlugins = sourceSets.create("log4jPlugins") {
-@@ -142,7 +_,7 @@
+@@ -143,7 +_,7 @@
  }
  
  dependencies {
@@ -57,7 +57,7 @@
      implementation("ca.spottedleaf:leafpile:1.0.0")
      implementation("org.jline:jline-terminal-ffm:3.29.0") // use ffm on java 22+
      implementation("org.jline:jline-terminal-jni:3.29.0") // fall back to jni on java 21
-@@ -209,16 +_,16 @@
+@@ -210,16 +_,16 @@
          val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
          attributes(
              "Main-Class" to "org.bukkit.craftbukkit.Main",
