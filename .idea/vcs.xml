@@ -3,6 +3,9 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/canvas-api" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/canvas-server" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/paper-api" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/paper-server" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/surf-canvas-server/src/minecraft/java" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/surf-canvas-server/src/minecraft/resources" vcs="Git" />
   </component>

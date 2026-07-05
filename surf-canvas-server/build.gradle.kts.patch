@@ -1,6 +1,31 @@
 --- a/canvas-server/build.gradle.kts
 +++ b/canvas-server/build.gradle.kts
-@@ -39,7 +_,29 @@
+@@ -1,4 +_,3 @@
+-import io.papermc.fill.model.BuildChannel
+ import io.papermc.paperweight.attribute.DevBundleOutput
+ import io.papermc.paperweight.util.*
+ import java.time.Instant
+@@ -9,7 +_,7 @@
+     `maven-publish`
+     idea
+     id("io.canvasmc.weaver.core")
+-    id("io.papermc.fill.gradle") version "1.0.12"
++    id("io.papermc.fill.gradle") version "1.0.11"
+ }
+ 
+ val paperMavenPublicUrl = "https://repo.papermc.io/repository/maven-public/"
+@@ -20,8 +_,8 @@
+ }
+ 
+ val mergeMinecraftATs by tasks.registering<MergeAccessTransforms> {
+-    firstFile.set(paperweight.activeFork.flatMap { it.buildDataDir.file("${it.name}.at") })
+-    secondFile.set(paperweight.activeFork.flatMap { it.buildDataDir.file("folia.at") })
++    firstFile.set(paperweight.forks.named("canvas").flatMap { it.buildDataDir.file("${it.name}.at") })
++    secondFile.set(paperweight.forks.named("canvas").flatMap { it.buildDataDir.file("folia.at") })
+ }
+ 
+ paperweight {
+@@ -39,7 +_,28 @@
          }
      }
  
@@ -17,7 +42,6 @@
 +            excludes = setOf(
 +                "src/minecraft",
 +                "paper-patches",
-+                "folia-patches",
 +                "minecraft-patches",
 +                "build.gradle.kts",
 +                "build.gradle.kts.patch"
@@ -57,7 +81,17 @@
      implementation("ca.spottedleaf:leafpile:1.0.0")
      implementation("org.jline:jline-terminal-ffm:3.29.0") // use ffm on java 22+
      implementation("org.jline:jline-terminal-jni:3.29.0") // fall back to jni on java 21
-@@ -210,16 +_,16 @@
+@@ -202,24 +_,24 @@
+     manifest {
+         val git = Git(rootProject.layout.projectDirectory.path)
+         val mcVersion = rootProject.providers.gradleProperty("mcVersion").get()
+-        val build = System.getenv("BUILD_NUMBER") ?: null
+-        val buildTime = providers.environmentVariable("BUILD_STARTED_AT").map(Instant::parse).orElse(Instant.EPOCH).get()
++        val build = System.getenv("BUILD_NUMBER") ?: -1
++        val buildTime = if (build != -1) Instant.now() else Instant.EPOCH
+         val gitHash = git.exec(providers, "rev-parse", "--short=7", "HEAD").get().trim()
+         val implementationVersion = "$mcVersion-${build ?: "DEV"}-$gitHash"
+         val date = git.exec(providers, "show", "-s", "--format=%ci", gitHash).get().trim()
          val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
          attributes(
              "Main-Class" to "org.bukkit.craftbukkit.Main",
@@ -79,3 +113,12 @@
              "Build-Number" to (build ?: ""),
              "Build-Time" to buildTime.toString(),
              "Git-Branch" to gitBranch,
+@@ -358,7 +_,7 @@
+ }
+ 
+ /* fill {
+-    project("paper")
++    project("folia")
+     versionFamily(paperweight.minecraftVersion.map { it.split(".", "-").takeWhile { part -> part.toIntOrNull() != null }.take(2).joinToString(".") })
+     version(paperweight.minecraftVersion)
+ 

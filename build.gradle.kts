@@ -33,7 +33,7 @@ paperweight {
         }
         patchDir("canvasApi") {
             upstreamPath = "canvas-api"
-            excludes = listOf("build.gradle.kts", "build.gradle.kts.patch", "paper-patches", "folia-patches")
+            excludes = listOf("build.gradle.kts", "build.gradle.kts.patch", "paper-patches")
             patchesDir = file("surf-canvas-api/canvas-patches")
             outputDir = file("canvas-api")
         }

@@ -151,11 +151,12 @@ jobs:
       - name: Apply patches (with fuzzy fallback)
         if: env.SKIP == 'false'
         run: |
-          ./gradlew applyAllPatches --no-scan --stacktrace || \
-            ./gradlew applyCanvasSingleFilePatchesFuzzy --no-scan || \
-            echo "APPLY_FAILED=true" >> $GITHUB_ENV
-          ./gradlew rebuildCanvasSingleFilePatches --no-scan || true
-          ./gradlew applyAllPatches --no-scan --stacktrace || echo "APPLY_FAILED=true" >> $GITHUB_ENV
+          ./gradlew applyAllPatches || ./gradlew applyCanvasSingleFilePatchesFuzzy || echo "APPLY_FAILED=true" >> $GITHUB_ENV
+          ./gradlew rebuildCanvasSingleFilePatches
+          ./gradlew applyAllPatches || echo "APPLY_FAILED=true" >> $GITHUB_ENV
+          ./gradlew rebuildPaperApiPatches
+          ./gradlew rebuildAllServerPatches
+          ./gradlew compileJava || echo "BUILD_FAILED=true" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Rebuild patches
