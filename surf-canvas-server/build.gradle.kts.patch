@@ -55,10 +55,10 @@
  
      updatingMinecraft {
          // oldPaperCommit = "d4fe85375af18bfa88f44d7c1e6a61904ae550cc"
-@@ -112,10 +_,16 @@
+@@ -110,10 +_,16 @@
+     main {
+         java { srcDir("../paper-server/src/main/java"); srcDir("../paper-server/src/generated/java") }
          resources { srcDir("../paper-server/src/main/resources") }
-         java { srcDir("/src/main/java"); }
-         resources { srcDir("/src/main/resources") }
 +        java { srcDir("../canvas-server/src/sources/java") }
 +        resources { srcDir("../canvas-server/src/sources/resources") }
 +        java { srcDir("../canvas-server/src/main/java") }
@@ -72,7 +72,7 @@
      }
  }
  val log4jPlugins = sourceSets.create("log4jPlugins") {
-@@ -143,7 +_,7 @@
+@@ -141,7 +_,7 @@
  }
  
  dependencies {
@@ -81,7 +81,7 @@
      implementation("ca.spottedleaf:leafpile:1.0.0")
      implementation("org.jline:jline-terminal-ffm:3.29.0") // use ffm on java 22+
      implementation("org.jline:jline-terminal-jni:3.29.0") // fall back to jni on java 21
-@@ -202,24 +_,24 @@
+@@ -200,24 +_,24 @@
      manifest {
          val git = Git(rootProject.layout.projectDirectory.path)
          val mcVersion = rootProject.providers.gradleProperty("mcVersion").get()
@@ -113,7 +113,7 @@
              "Build-Number" to (build ?: ""),
              "Build-Time" to buildTime.toString(),
              "Git-Branch" to gitBranch,
-@@ -358,7 +_,7 @@
+@@ -356,7 +_,7 @@
  }
  
  /* fill {
