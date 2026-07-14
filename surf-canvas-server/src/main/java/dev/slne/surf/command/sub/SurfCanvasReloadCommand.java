@@ -2,7 +2,7 @@ package dev.slne.surf.command.sub;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.slne.surf.SurfCanvasGlobalConfiguration;
-import io.canvasmc.canvas.command.SubCommand;
+import io.canvasmc.canvas.commands.SubCommand;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;

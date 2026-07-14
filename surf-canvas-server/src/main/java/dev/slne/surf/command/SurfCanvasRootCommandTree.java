@@ -3,7 +3,7 @@ package dev.slne.surf.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.slne.surf.command.sub.SurfCanvasReloadCommand;
-import io.canvasmc.canvas.command.SubCommand;
+import io.canvasmc.canvas.commands.SubCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
