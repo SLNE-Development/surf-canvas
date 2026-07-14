@@ -10,7 +10,6 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/surf-canvas-api" />
             <option value="$PROJECT_DIR$/surf-canvas-server" />
-            <option value="$PROJECT_DIR$/test-plugin" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="true" />
