@@ -296,10 +296,10 @@ index 3fcdea18a3eed08fb7eec2bf81cd52321d120989..8b1993048c670f0fba55d46293f3525b
  
      @Override
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-index 5681dbb4c3dcf7ffd60db5074c8164740144460a..d0048b3aba37ca7ce2f4389dbeac7b77cb5150a4 100644
+index 57c80795c551e0b03fa169c9a341fc0e8a19a068..7bb5b63ce606f110a4e6d66cf3d0ce5743c425bb 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-@@ -39,6 +39,7 @@ public record ServerBuildInfoImpl(
+@@ -41,6 +41,7 @@ public record ServerBuildInfoImpl(
      private static final String BRAND_PAPER_NAME = "Paper";
      // Canvas start - Rebrand
      private static final String BRAND_CANVAS_NAME = "Canvas";
@@ -307,7 +307,7 @@ index 5681dbb4c3dcf7ffd60db5074c8164740144460a..d0048b3aba37ca7ce2f4389dbeac7b77
  
      // private static final Key BRAND_CANVAS_ID = Key.key("canvasmc", "canvas");
      // private static final Key BRAND_FOLIA_ID = Key.key("papermc", "folia");
-@@ -54,9 +55,9 @@ public record ServerBuildInfoImpl(
+@@ -56,9 +57,9 @@ public record ServerBuildInfoImpl(
          this(
              getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
                  .map(Key::key)
