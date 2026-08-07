@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand to SurfCanvas
 
 
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
-index e394a3643ad582cd823ac61b8ce56b8b069c3ab4..4771b17f585bca8521da90389bf238de15f30770 100644
+index 2d65442da4127f9eff2fa9a769e19517f87ea101..49e9aa5508f41bc24906b1edcfcb10d24f3d87bd 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
 @@ -28,6 +28,12 @@ public interface ServerBuildInfo {
