@@ -1,5 +1,12 @@
 paperPluginYaml {
-    main = "dev.slne.surf.testplugin.TestPlugin"
-    bootstrapper = "dev.slne.surf.testplugin.TestPluginBootstrap"
-    loader = "dev.slne.surf.testplugin.TestPluginLoader"
+    name = "ReconfigurationReproducer"
+    version = "1.0.0"
+    main = "dev.slne.surf.testplugin.ReconfigurationReproducer"
+    authors = listOf("SLNE Development")
+    foliaSupported = false
+}
+
+tasks.jar {
+    archiveBaseName = "reconfiguration-reproducer"
+    archiveVersion = "1.0.0"
 }
