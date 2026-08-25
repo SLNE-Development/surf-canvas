@@ -151,18 +151,27 @@ jobs:
       - name: Apply patches (with fuzzy fallback)
         if: env.SKIP == 'false'
         run: |
-          ./gradlew applyAllPatches || ./gradlew applyCanvasSingleFilePatchesFuzzy || echo "APPLY_FAILED=true" >> $GITHUB_ENV
-          ./gradlew rebuildCanvasSingleFilePatches
-          ./gradlew applyAllPatches || echo "APPLY_FAILED=true" >> $GITHUB_ENV
-          ./gradlew rebuildPaperApiPatches
-          ./gradlew rebuildAllServerPatches
-          ./gradlew compileJava || echo "BUILD_FAILED=true" >> $GITHUB_ENV
+          if ./gradlew applyAllPatches --no-scan --stacktrace; then
+            exit 0
+          fi
+
+          echo "applyAllPatches failed - retrying the single-file patches with fuzzy matching."
+          rm -f surf-canvas-server/build.gradle.kts surf-canvas-api/build.gradle.kts
+
+          if ./gradlew applyCanvasSingleFilePatchesFuzzy --no-scan --stacktrace &&
+             ./gradlew rebuildCanvasSingleFilePatches --no-scan --stacktrace &&
+             ./gradlew applyAllPatches --no-scan --stacktrace; then
+            echo "Recovered: patches applied with fuzzy matching and rebuilt."
+          else
+            echo "APPLY_FAILED=true" >> $GITHUB_ENV
+          fi
         continue-on-error: true
 
       - name: Rebuild patches
         if: env.SKIP == 'false' && env.APPLY_FAILED != 'true'
         run: |
-          ./gradlew rebuildPatches --no-scan --stacktrace || echo "REBUILD_FAILED=true" >> $GITHUB_ENV
+          ./gradlew rebuildCanvasPatches --no-scan --stacktrace || echo "REBUILD_FAILED=true" >> $GITHUB_ENV
+          ./gradlew rebuildAllServerPatches --no-scan --stacktrace || echo "REBUILD_FAILED=true" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Compile check
