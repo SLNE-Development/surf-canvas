@@ -1,0 +1,11 @@
+++++ REJECTED HUNK: 6
+@@ -141,7 +167,7 @@
+ }
+ 
+ dependencies {
+-    implementation(projects.canvasApi)
++    implementation(projects.surfCanvasApi)
+     implementation("ca.spottedleaf:leafpile:1.1.0")
+     implementation("org.jline:jline-terminal-ffm:3.29.0") // use ffm on java 22+
+     implementation("org.jline:jline-terminal-jni:3.29.0") // fall back to jni on java 21
+++++ END HUNK
