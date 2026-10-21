@@ -15,6 +15,7 @@ build/
 /paper-server
 /paper-api
 test-plugin.settings.gradle.kts
+*.rej
 
 ### IntelliJ IDEA ###
 .idea/modules.xml

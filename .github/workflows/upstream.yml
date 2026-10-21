@@ -10,13 +10,28 @@ on:
         required: false
         description: "Canvas branch to update from (overrides gradle.properties canvasBranch)"
 
+concurrency:
+  group: update-upstream
+  cancel-in-progress: false
+
 env:
   PLUGIN_ID: "io.canvasmc.weaver.patcher"
   FILE_PATH: "build.gradle.kts"
+  ISSUE_LABEL: "upstream-update"
+  API: "https://api.github.com/repos/${{ github.repository }}"
+  RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  GIT_AUTHOR_NAME: "surf-canvas-upstream-bot[bot]"
+  GIT_AUTHOR_EMAIL: "surf-canvas-upstream-bot[bot]@users.noreply.github.com"
+  GIT_COMMITTER_NAME: "surf-canvas-upstream-bot[bot]"
+  GIT_COMMITTER_EMAIL: "surf-canvas-upstream-bot[bot]@users.noreply.github.com"
 
 permissions:
   contents: write
   issues: write
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   update-upstream:
@@ -38,64 +53,72 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Authenticate
-        run: |
-          git config --global user.name "surf-canvas-upstream-bot[bot]"
-          git config --global user.email "surf-canvas-upstream-bot[bot]@users.noreply.github.com"
-
       - name: Resolve Canvas branch
+        env:
+          INPUT_BRANCH: ${{ inputs.canvas-branch }}
         run: |
-          if [ -n "${{ inputs.canvas-branch }}" ]; then
-            CANVAS_BRANCH="${{ inputs.canvas-branch }}"
+          if [ -n "$INPUT_BRANCH" ]; then
+            CANVAS_BRANCH="$INPUT_BRANCH"
           else
             CANVAS_BRANCH=$(grep '^canvasBranch' gradle.properties | awk -F '=' '{print $2}' | tr -d '[:space:]\r')
           fi
 
           if [ -z "$CANVAS_BRANCH" ]; then
-            echo "No canvasBranch found in gradle.properties and no input provided." >&2
+            echo "::error::No canvasBranch found in gradle.properties and no input provided."
             exit 1
           fi
 
-          echo "CANVAS_BRANCH=$CANVAS_BRANCH" >> $GITHUB_ENV
+          echo "CANVAS_BRANCH=$CANVAS_BRANCH" >> "$GITHUB_ENV"
           echo "Using Canvas branch: $CANVAS_BRANCH"
 
       - name: Check if update is needed
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          OPEN_ISSUE=$(curl -s \
-            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues?state=open&labels=upstream-update&per_page=1" \
-            | jq -r '.[0].number // empty')
+          api() { curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$@"; }
+
+          ISSUE_JSON=$(api "$API/issues?state=open&labels=$ISSUE_LABEL&per_page=1")
+          OPEN_ISSUE=$(jq -r '.[0].number // empty' <<< "$ISSUE_JSON")
+          ISSUE_BODY=$(jq -r '.[0].body // empty' <<< "$ISSUE_JSON")
 
           CURRENT_COMMIT=$(grep '^canvasCommit' gradle.properties | awk -F '=' '{print $2}' | tr -d '[:space:]\r')
-          LATEST_COMMIT=$(curl -s \
-            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
-            "https://api.github.com/repos/CraftCanvasMC/Canvas/commits/$CANVAS_BRANCH" \
-            | jq -r '.sha' | tr -d '[:space:]\r')
+          LATEST_COMMIT=$(api "https://api.github.com/repos/CraftCanvasMC/Canvas/commits/$CANVAS_BRANCH" | jq -r '.sha')
 
-          echo "OPEN_ISSUE=$OPEN_ISSUE" >> $GITHUB_ENV
-          echo "CURRENT_COMMIT=$CURRENT_COMMIT" >> $GITHUB_ENV
-          echo "LATEST_COMMIT=$LATEST_COMMIT" >> $GITHUB_ENV
+          if ! [[ "$LATEST_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Could not resolve the latest Canvas commit (got '$LATEST_COMMIT')."
+            exit 1
+          fi
+
+          {
+            echo "OPEN_ISSUE=$OPEN_ISSUE"
+            echo "CURRENT_COMMIT=$CURRENT_COMMIT"
+            echo "LATEST_COMMIT=$LATEST_COMMIT"
+          } >> "$GITHUB_ENV"
 
           echo "Current commit: $CURRENT_COMMIT"
           echo "Latest commit:  $LATEST_COMMIT"
 
-          if [ -n "$OPEN_ISSUE" ] || [ "$CURRENT_COMMIT" = "$LATEST_COMMIT" ]; then
-            echo "SKIP=true" >> $GITHUB_ENV
+          SKIP=false
+          if [ "$CURRENT_COMMIT" = "$LATEST_COMMIT" ]; then
+            echo "Skipping: already up-to-date."
+            SKIP=true
             if [ -n "$OPEN_ISSUE" ]; then
-              echo "Skipping: open upstream-update issue #$OPEN_ISSUE already exists."
-            else
-              echo "Skipping: already up-to-date."
+              echo "Closing #$OPEN_ISSUE: the update was resolved outside of this workflow."
+              jq -n --arg body "Resolved: \`canvasCommit\` is now [\`${LATEST_COMMIT:0:7}\`](https://github.com/CraftCanvasMC/Canvas/commit/$LATEST_COMMIT)." '{body: $body}' \
+                | api -X POST "$API/issues/$OPEN_ISSUE/comments" -d @- > /dev/null
+              api -X PATCH "$API/issues/$OPEN_ISSUE" -d '{"state":"closed","state_reason":"completed"}' > /dev/null
             fi
-          else
-            echo "SKIP=false" >> $GITHUB_ENV
+          elif [ -n "$OPEN_ISSUE" ] && [[ "$ISSUE_BODY" == *"$LATEST_COMMIT"* ]] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "Skipping: #$OPEN_ISSUE already reports a failure for $LATEST_COMMIT. Dispatch manually to retry."
+            SKIP=true
           fi
+
+          echo "SKIP=$SKIP" >> "$GITHUB_ENV"
 
       - name: Update Weaver patcher version
         if: env.SKIP == 'false'
         run: |
-          UPSTREAM_GRADLE=$(curl -s \
-            "https://raw.githubusercontent.com/CraftCanvasMC/Canvas/$CANVAS_BRANCH/build.gradle.kts")
+          UPSTREAM_GRADLE=$(curl -fsS "https://raw.githubusercontent.com/CraftCanvasMC/Canvas/$LATEST_COMMIT/build.gradle.kts")
 
           UPSTREAM_WEAVER=$(echo "$UPSTREAM_GRADLE" | grep "$PLUGIN_ID" | sed -E 's/.*version "([^"]+)".*/\1/' | tr -d '[:space:]\r' | head -n1)
           LOCAL_WEAVER=$(grep "$PLUGIN_ID" "$FILE_PATH" | sed -E 's/.*version "([^"]+)".*/\1/' | tr -d '[:space:]\r' | head -n1)
@@ -111,8 +134,7 @@ jobs:
       - name: Update canvas refs in gradle.properties
         if: env.SKIP == 'false'
         run: |
-          UPSTREAM_PROPS=$(curl -s \
-            "https://raw.githubusercontent.com/CraftCanvasMC/Canvas/$CANVAS_BRANCH/gradle.properties")
+          UPSTREAM_PROPS=$(curl -fsS "https://raw.githubusercontent.com/CraftCanvasMC/Canvas/$LATEST_COMMIT/gradle.properties")
           UPSTREAM_MC=$(echo "$UPSTREAM_PROPS" | grep '^mcVersion' | awk -F '=' '{print $2}' | tr -d ' \r')
           UPSTREAM_API=$(echo "$UPSTREAM_PROPS" | grep '^apiVersion' | awk -F '=' '{print $2}' | tr -d ' \r')
 
@@ -122,7 +144,7 @@ jobs:
           CURRENT_MC=$(grep '^mcVersion' gradle.properties | awk -F '=' '{print $2}' | tr -d ' \r')
           CURRENT_API=$(grep '^apiVersion' gradle.properties | awk -F '=' '{print $2}' | tr -d ' \r')
 
-          if [ "$CURRENT_MC" != "$UPSTREAM_MC" ]; then
+          if [ -n "$UPSTREAM_MC" ] && [ "$CURRENT_MC" != "$UPSTREAM_MC" ]; then
             echo "Updating mcVersion from $CURRENT_MC to $UPSTREAM_MC"
             sed -i -E "s/^(mcVersion=).*$/\1$UPSTREAM_MC/" gradle.properties
             echo "Updating apiVersion from $CURRENT_API to $UPSTREAM_API"
@@ -151,86 +173,110 @@ jobs:
       - name: Apply patches (with fuzzy fallback)
         if: env.SKIP == 'false'
         run: |
-          if ./gradlew applyAllPatches --no-scan --stacktrace; then
-            exit 0
+          if ! bash scripts/ci/apply-patches.sh "$RUNNER_TEMP/apply.log" "$RUNNER_TEMP/fuzzy.txt"; then
+            echo "FAILED_STAGE=apply" >> "$GITHUB_ENV"
+            cp "$RUNNER_TEMP/apply.log" "$RUNNER_TEMP/failure.log"
           fi
-
-          echo "applyAllPatches failed - retrying the single-file patches with fuzzy matching."
-          rm -f surf-canvas-server/build.gradle.kts surf-canvas-api/build.gradle.kts
-
-          if ./gradlew applyCanvasSingleFilePatchesFuzzy --no-scan --stacktrace &&
-             ./gradlew rebuildCanvasSingleFilePatches --no-scan --stacktrace &&
-             ./gradlew applyAllPatches --no-scan --stacktrace; then
-            echo "Recovered: patches applied with fuzzy matching and rebuilt."
-          else
-            echo "APPLY_FAILED=true" >> $GITHUB_ENV
-          fi
-        continue-on-error: true
 
       - name: Rebuild patches
-        if: env.SKIP == 'false' && env.APPLY_FAILED != 'true'
+        if: env.SKIP == 'false' && env.FAILED_STAGE == ''
         run: |
-          ./gradlew rebuildCanvasPatches --no-scan --stacktrace || echo "REBUILD_FAILED=true" >> $GITHUB_ENV
-          ./gradlew rebuildAllServerPatches --no-scan --stacktrace || echo "REBUILD_FAILED=true" >> $GITHUB_ENV
-        continue-on-error: true
+          # Separate invocations: together they fail task validation (implicit dependency on sortFoliaATs).
+          for task in rebuildCanvasPatches rebuildAllServerPatches; do
+            if ! ./gradlew "$task" --no-scan --stacktrace 2>&1 | tee -a "$RUNNER_TEMP/rebuild.log"; then
+              echo "FAILED_STAGE=rebuild" >> "$GITHUB_ENV"
+              cp "$RUNNER_TEMP/rebuild.log" "$RUNNER_TEMP/failure.log"
+              break
+            fi
+          done
 
       - name: Compile check
-        if: env.SKIP == 'false' && env.APPLY_FAILED != 'true'
+        if: env.SKIP == 'false' && env.FAILED_STAGE == ''
         run: |
-          ./gradlew compileJava --no-scan --stacktrace || echo "BUILD_FAILED=true" >> $GITHUB_ENV
-        continue-on-error: true
+          if ! ./gradlew compileJava --no-scan --stacktrace 2>&1 | tee "$RUNNER_TEMP/compile.log"; then
+            echo "FAILED_STAGE=compile" >> "$GITHUB_ENV"
+            cp "$RUNNER_TEMP/compile.log" "$RUNNER_TEMP/failure.log"
+          fi
 
-      - name: Open issue on apply failure
-        if: env.APPLY_FAILED == 'true' && env.SKIP == 'false'
+      - name: Report failure
+        if: env.SKIP == 'false' && env.FAILED_STAGE != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          curl -s -X POST \
-            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues" \
-            -d "{
-              \"title\": \"[BOT] Failed to apply patches after Canvas update\",
-              \"body\": \"Failed to apply surf-canvas patches after updating Canvas to [\`$LATEST_COMMIT\`](https://github.com/CraftCanvasMC/Canvas/commit/$LATEST_COMMIT) on branch \`$CANVAS_BRANCH\`.\",
-              \"labels\": [\"upstream-update\"]
-            }"
+          api() { curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$@"; }
 
-      - name: Open issue on build failure
-        if: env.BUILD_FAILED == 'true' && env.APPLY_FAILED != 'true' && env.SKIP == 'false'
-        run: |
-          curl -s -X POST \
-            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues" \
-            -d "{
-              \"title\": \"[BOT] Build failed after Canvas update\",
-              \"body\": \"Patches applied successfully but compilation failed after updating Canvas to [\`$LATEST_COMMIT\`](https://github.com/CraftCanvasMC/Canvas/commit/$LATEST_COMMIT) on branch \`$CANVAS_BRANCH\`.\",
-              \"labels\": [\"upstream-update\"]
-            }"
+          case "$FAILED_STAGE" in
+            apply)   TITLE="[BOT] Failed to apply patches after Canvas update" ;;
+            rebuild) TITLE="[BOT] Failed to rebuild patches after Canvas update" ;;
+            *)       TITLE="[BOT] Build failed after Canvas update" ;;
+          esac
 
-      - name: Generate commit message
-        if: env.BUILD_FAILED != 'true' && env.APPLY_FAILED != 'true' && env.SKIP == 'false'
-        run: |
-          UPDATES=$(curl -s \
-            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/CraftCanvasMC/Canvas/compare/$CURRENT_COMMIT...$LATEST_COMMIT" \
-            | jq -r '.commits[] | "CraftCanvasMC/Canvas@\(.sha[:7]) - \(.commit.message | split("\n")[0])"')
+          # Strip ANSI colors and stack frames so the relevant Gradle output fits into the issue.
+          EXCERPT=$(sed -E 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/failure.log" \
+            | grep -vE '^\s+at |^\s+\.\.\. [0-9]+ more' \
+            | grep -E -B2 -A12 'FAILURE:|FAILED|Hunk [0-9]+: FAILURE|error:' \
+            | tail -n 150 || true)
 
-          DISCLAIMER="Upstream has released updates that appear to apply and compile correctly."$'\n'"The changes in this commit are automated, meaning there might be things missing."
+          SUMMARY="Stage \`$FAILED_STAGE\` failed after updating Canvas to [\`$LATEST_COMMIT\`](https://github.com/CraftCanvasMC/Canvas/commit/$LATEST_COMMIT) on branch \`$CANVAS_BRANCH\`."$'\n\n'"Run: $RUN_URL"
+          DETAILS="$SUMMARY"$'\n\n<details><summary>Gradle output</summary>\n\n```\n'"$EXCERPT"$'\n```\n</details>'
 
-          printf "Updated upstream (Canvas)\n\n%s\n\nCanvas Changes:\n%s\n" "$DISCLAIMER" "$UPDATES" > commit_message.txt
+          if [ -n "$OPEN_ISSUE" ]; then
+            jq -n --arg title "$TITLE" --arg body "$SUMMARY" '{title: $title, body: $body}' \
+              | api -X PATCH "$API/issues/$OPEN_ISSUE" -d @- > /dev/null
+            jq -n --arg body "$DETAILS" '{body: $body}' \
+              | api -X POST "$API/issues/$OPEN_ISSUE/comments" -d @- > /dev/null
+            echo "Updated #$OPEN_ISSUE."
+          else
+            jq -n --arg title "$TITLE" --arg body "$DETAILS" --arg label "$ISSUE_LABEL" \
+              '{title: $title, body: $body, labels: [$label]}' \
+              | api -X POST "$API/issues" -d @- | jq -r '"Opened #\(.number)."'
+          fi
 
       - name: Commit and push
-        if: env.BUILD_FAILED != 'true' && env.APPLY_FAILED != 'true' && env.SKIP == 'false'
+        if: env.SKIP == 'false' && env.FAILED_STAGE == ''
         env:
-          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          git add .
-          git restore --staged commit_message.txt
-          git diff --cached --quiet && {
+          api() { curl -fsS -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$@"; }
+
+          # Rejects are left behind by strict apply attempts that were recovered with fuzzy matching.
+          find surf-canvas-api surf-canvas-server -name '*.rej' -delete
+
+          git add -A
+          if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
-          }
+          fi
 
-          git commit -F commit_message.txt
-          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git"
+          UPDATES=$(api "https://api.github.com/repos/CraftCanvasMC/Canvas/compare/$CURRENT_COMMIT...$LATEST_COMMIT" \
+            | jq -r '.commits[] | "CraftCanvasMC/Canvas@\(.sha[:7]) - \(.commit.message | split("\n")[0])"')
+
+          {
+            echo "Updated upstream (Canvas)"
+            echo
+            echo "Upstream has released updates that appear to apply and compile correctly."
+            echo "The changes in this commit are automated, meaning there might be things missing."
+            if [ -s "$RUNNER_TEMP/fuzzy.txt" ]; then
+              echo
+              echo "Patches re-applied with fuzzy matching (review recommended):"
+              sed 's/^/- /' "$RUNNER_TEMP/fuzzy.txt"
+            fi
+            echo
+            echo "Canvas Changes:"
+            echo "$UPDATES"
+          } > "$RUNNER_TEMP/commit_message.txt"
+
+          git commit -F "$RUNNER_TEMP/commit_message.txt"
           git push origin HEAD:master
+
+          if [ -n "$OPEN_ISSUE" ]; then
+            jq -n --arg body "Resolved by $(git rev-parse HEAD) ($RUN_URL)." '{body: $body}' \
+              | api -X POST "$API/issues/$OPEN_ISSUE/comments" -d @- > /dev/null
+            api -X PATCH "$API/issues/$OPEN_ISSUE" -d '{"state":"closed","state_reason":"completed"}' > /dev/null
+          fi
+
+      - name: Fail run on update failure
+        if: env.SKIP == 'false' && env.FAILED_STAGE != ''
+        run: |
+          echo "::error::Upstream update failed in stage '$FAILED_STAGE'. See the upstream-update issue."
+          exit 1
