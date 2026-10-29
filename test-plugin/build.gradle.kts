@@ -1,12 +1,13 @@
 paperPluginYaml {
-    name = "ReconfigurationReproducer"
+    name = "RegionSplitReproducer"
     version = "1.0.0"
-    main = "dev.slne.surf.testplugin.ReconfigurationReproducer"
+    main = "dev.slne.surf.testplugin.RegionSplitReproducer"
+    description = "Reproduces the Folia region split + PlayerChunkUnloadEvent 'Async chunk retrieval' crash"
     authors = listOf("SLNE Development")
-    foliaSupported = false
+    foliaSupported = true
 }
 
 tasks.jar {
-    archiveBaseName = "reconfiguration-reproducer"
+    archiveBaseName = "regionsplit-reproducer"
     archiveVersion = "1.0.0"
 }

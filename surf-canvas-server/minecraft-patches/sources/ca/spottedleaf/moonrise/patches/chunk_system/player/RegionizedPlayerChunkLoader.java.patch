@@ -1,0 +1,15 @@
+--- a/ca/spottedleaf/moonrise/patches/chunk_system/player/RegionizedPlayerChunkLoader.java
++++ b/ca/spottedleaf/moonrise/patches/chunk_system/player/RegionizedPlayerChunkLoader.java
+@@ -461,7 +_,11 @@
+             this.player.connection.send(new ClientboundForgetLevelChunkPacket(new ChunkPos(chunkX, chunkZ)));
+             // Paper start - PlayerChunkUnloadEvent
+             if (io.papermc.paper.event.packet.PlayerChunkUnloadEvent.getHandlerList().getRegisteredListeners().length > 0) {
+-                new io.papermc.paper.event.packet.PlayerChunkUnloadEvent(player.getBukkitEntity().getWorld().getChunkAt(new ChunkPos(chunkX, chunkZ).longKey()), player.getBukkitEntity()).callEvent();
++                // SurfCanvas start - region threading - build the event chunk without a world lookup
++                // CraftWorld#getChunkAt thread-checks and sync-loads; after a same-region teleport the chunks unloaded here
++                // may already belong to another region. The lazy handle resolves nothing until a listener asks for it.
++                new io.papermc.paper.event.packet.PlayerChunkUnloadEvent(new org.bukkit.craftbukkit.CraftChunk(this.world, chunkX, chunkZ), player.getBukkitEntity()).callEvent();
++                // SurfCanvas end - region threading - build the event chunk without a world lookup
+             }
+             // Paper end - PlayerChunkUnloadEvent
+         }

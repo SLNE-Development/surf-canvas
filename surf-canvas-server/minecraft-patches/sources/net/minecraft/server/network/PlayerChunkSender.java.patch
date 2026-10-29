@@ -1,0 +1,13 @@
+--- a/net/minecraft/server/network/PlayerChunkSender.java
++++ b/net/minecraft/server/network/PlayerChunkSender.java
+@@ -46,7 +_,9 @@
+             player.connection.send(new ClientboundForgetLevelChunkPacket(pos));
+             // Paper start - PlayerChunkUnloadEvent
+             if (io.papermc.paper.event.packet.PlayerChunkUnloadEvent.getHandlerList().getRegisteredListeners().length > 0) {
+-                new io.papermc.paper.event.packet.PlayerChunkUnloadEvent(player.getBukkitEntity().getWorld().getChunkAt(pos.pack()), player.getBukkitEntity()).callEvent();
++                // SurfCanvas start - region threading - build the event chunk without a world lookup; see RegionizedPlayerChunkLoader#sendUnloadChunkRaw
++                new io.papermc.paper.event.packet.PlayerChunkUnloadEvent(new org.bukkit.craftbukkit.CraftChunk(player.level(), pos.x(), pos.z()), player.getBukkitEntity()).callEvent();
++                // SurfCanvas end - region threading - build the event chunk without a world lookup
+             }
+             // Paper end - PlayerChunkUnloadEvent
+         }
