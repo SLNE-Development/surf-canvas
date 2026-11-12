@@ -5,10 +5,10 @@ Subject: [PATCH] Rebrand to SurfCanvas
 
 
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
-index 4e9e4e40d31a323bf31aa3cb08ba10f94ebc053c..683274ecaf75d9ad8f525d87aeba064eb24e5796 100644
+index f669f12bdc434488e515562fc582567e6caf2b10..cf629c137ee0c7c13bb2f742ba7dfefb0f746eaa 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
-@@ -26,6 +26,12 @@ public interface ServerBuildInfo {
+@@ -27,6 +27,12 @@ public interface ServerBuildInfo {
       */
      Key BRAND_CANVAS_ID = Key.key("canvasmc", "canvas");
      // Canvas end - Rebrand
