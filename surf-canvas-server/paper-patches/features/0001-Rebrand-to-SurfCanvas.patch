@@ -296,14 +296,14 @@ index ba7af8b8136e1451a2d173245e855586d33fa639..2cd2bb1658b164288b36b51ca0e23f57
  
      @Override
 diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-index 57c80795c551e0b03fa169c9a341fc0e8a19a068..7bb5b63ce606f110a4e6d66cf3d0ce5743c425bb 100644
+index 57c80795c551e0b03fa169c9a341fc0e8a19a068..95167dbe2c285042b54e32ca379e2e29df6d1047 100644
 --- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
 +++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
 @@ -41,6 +41,7 @@ public record ServerBuildInfoImpl(
      private static final String BRAND_PAPER_NAME = "Paper";
      // Canvas start - Rebrand
      private static final String BRAND_CANVAS_NAME = "Canvas";
-+    private static final String BRAND_SURF_CANVAS = "SurfCanvas"; // SurfCanvas - Rebrand
++    private static final String BRAND_SURF_CANVAS_NAME = "SurfCanvas"; // SurfCanvas - Rebrand
  
      // private static final Key BRAND_CANVAS_ID = Key.key("canvasmc", "canvas");
      // private static final Key BRAND_FOLIA_ID = Key.key("papermc", "folia");
@@ -315,7 +315,16 @@ index 57c80795c551e0b03fa169c9a341fc0e8a19a068..7bb5b63ce606f110a4e6d66cf3d0ce57
 +                .orElse(BRAND_SURF_CANVAS_ID), // Canvas - Rebrand // SurfCanvas - Rebrand
              getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
 -                .orElse(BRAND_CANVAS_NAME), // Canvas - Rebrand
-+                .orElse(BRAND_SURF_CANVAS), // Canvas - Rebrand // SurfCanvas - Rebrand
++                .orElse(BRAND_SURF_CANVAS_NAME), // Canvas - Rebrand // SurfCanvas - Rebrand
              SharedConstants.getCurrentVersion().id(),
              SharedConstants.getCurrentVersion().name(),
              getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
+@@ -80,7 +81,7 @@ public record ServerBuildInfoImpl(
+ 
+     @Override
+     public boolean isBrandCompatible(final @NotNull Key brandId) {
+-        return brandId.equals(this.brandId) || brandId.equals(BRAND_PAPER_ID) || brandId.equals(BRAND_FOLIA_ID); // Canvas - Rebrand
++        return brandId.equals(this.brandId) || brandId.equals(BRAND_PAPER_ID) || brandId.equals(BRAND_FOLIA_ID) || brandId.equals(BRAND_CANVAS_ID); // Canvas - Rebrand // SurfCanvas - Rebrand
+     }
+ 
+     @Override
