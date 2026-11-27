@@ -1,6 +1,6 @@
 --- a/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
 +++ b/src/main/java/io/papermc/paper/plugin/manager/PaperPluginInstanceManager.java
-@@ -232,11 +_,32 @@
+@@ -232,11 +_,43 @@
              plugin.getLogger().info("Disabling %s".formatted(pluginName));
  
              this.server.getPluginManager().callEvent(new PluginDisableEvent(plugin));
@@ -10,18 +10,29 @@
 -                javaPlugin.setEnabled(false);
 -            } catch (Throwable ex) {
 -                this.server.getLogger().log(Level.SEVERE, "Error occurred while disabling " + pluginName, ex);
-+                final Thread disableThread = new Thread(() -> {
++                final Runnable disable = () -> {
 +                    try {
 +                        javaPlugin.setEnabled(false);
 +                    } catch (Throwable ex) {
 +                        this.server.getLogger().log(Level.SEVERE, "Error occurred while disabling " + pluginName, ex);
 +                    }
-+                }, "Plugin Disable - " + pluginName);
++                };
++                final String threadName = "Plugin Disable - " + pluginName;
++                // While the server stops, the region threads are halted and the region shutdown thread owns every region
++                // and entity. The disable thread then acts for it, so it passes the same thread checks.
++                final Thread disableThread = Thread.currentThread() instanceof io.papermc.paper.threadedregions.RegionShutdownThread
++                    ? new io.papermc.paper.threadedregions.RegionShutdownThread(threadName, false) {
++                        @Override
++                        public void run() {
++                            disable.run();
++                        }
++                    }
++                    : new Thread(disable, threadName);
 +                disableThread.setDaemon(false);
 +                disableThread.start();
 +                disableThread.join(java.util.concurrent.TimeUnit.SECONDS.toMillis(timeout));
 +                if (disableThread.isAlive()) {
-+                    this.server.getLogger().log(Level.SEVERE, "Plugin " + pluginName + " did not shut down within {} seconds, interrupting", timeout);
++                    this.server.getLogger().log(Level.SEVERE, "Plugin " + pluginName + " did not shut down within " + timeout + " seconds, interrupting");
 +                    disableThread.interrupt();
 +                    disableThread.join(java.util.concurrent.TimeUnit.SECONDS.toMillis(5));
 +                    if (disableThread.isAlive()) {
